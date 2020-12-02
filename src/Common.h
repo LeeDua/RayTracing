@@ -1,7 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include "types.h";
+#pragma once
+#include "types.h"
 
 
 #endif
