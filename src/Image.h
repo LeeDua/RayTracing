@@ -1,7 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#pragma once
+
 #include<fstream>
 #include<vector>
 #include"Vec3.h"
@@ -10,7 +10,7 @@
 
 namespace RayTracing {
     
-        template <typename T=Vec3<uint8_t>>
+        template <typename T=RGB_t>
         class Image {
         public:
             explicit Image(int w, int h){
@@ -30,7 +30,10 @@ namespace RayTracing {
             void setColor(int i, int j, T value){
                 at(i,j) = value;
             }
-            void setColor(int i, int j, multi_type r, multi_type g, multi_type b){
+            void setColor(int i, int j, dtype r, dtype g, dtype b){
+                at(i,j) = T(img_dtype(r*255.99), img_dtype(g*255.99), img_dtype(g*255.99));
+            }
+            void setColor(int i, int j, img_dtype r, img_dtype g, img_dtype b){
                 at(i,j) = T(r, g, b);
             }
             void setOutputFile(std::string img_path){
