@@ -9,6 +9,7 @@
 #endif
 
 #include "types.h"
+#include <limits>
 
 
 #endif

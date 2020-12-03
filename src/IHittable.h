@@ -17,7 +17,7 @@ namespace RayTracing{
     class IHittable
     {
     public:
-        virtual bool hit(const Ray& ray, HitRecord& record) const = 0;
+        virtual bool hit(const Ray& ray, HitRecord& record, dtype minDist, dtype maxDist) const = 0;
     };
 }
 

@@ -9,7 +9,7 @@ namespace RayTracing{
     class Camera
     {
     public:
-        explicit Camera(Pt3 ori, int viewport_width, int viewport_height, int focal_length):origin(ori){
+        explicit Camera(Pt3 ori, dtype viewport_width, dtype viewport_height, dtype focal_length):origin(ori){
             horizontal = Vec3(viewport_width, 0, 0);
             vertical = Vec3(0, viewport_height, 0);
             lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0,0,focal_length);

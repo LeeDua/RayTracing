@@ -16,11 +16,13 @@ namespace RayTracing{
         void clear(){ objs.clear(); }
 
         //ToDO: Should ret vector record ?
-        virtual bool hit(const Ray& ray, HitRecord& record) const override{
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=std::numeric_limits<dtype>::infinity()) const override{
+            
             bool hit_once = false;
             for(const obj_ptr& optr: objs){
-                if(optr->hit(ray, record)){
+                if(optr->hit(ray, record, minDist, maxDist)){
                     hit_once = true;
+                    maxDist = record.t;
                 }
             }
             return hit_once;
