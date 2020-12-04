@@ -38,11 +38,11 @@ namespace RayTracing {
             e[2] *= t;
             return *this;
         }
-        Vector3 &operator/=(const multi_type t) { return (*this *= 1.0 / t); }
+        Vector3 &operator/=(const multi_type t) { return (*this *= (1.0 / t)); }
         void set(T e0, T e1, T e2){ e[0] = e0; e[1] = e1; e[2] = e2; }
         T square_sum() const { return dot(*this); }
         T length() const { return sqrt(square_sum()); }
-        void normalize() { e /= length(); }
+        void normalize() { (*this) /= length(); }
         Vector3 normalized() {
             T len = length();
             return Vector3(e[0] / len, e[1] / len, e[2] / len);

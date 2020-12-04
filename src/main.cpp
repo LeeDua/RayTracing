@@ -24,10 +24,14 @@ void ray_test(){
     const int img_height = (double)img_width / aspect_ratio;
     Image<RGB_t> img(img_width, img_height);
 
-    dtype viewport_height = 2.0;
-    dtype viewport_width = aspect_ratio * viewport_height;
     dtype focal_length = 1.0;
-    Camera cam(Pt3(0.0,0.0,0.0), viewport_width, viewport_height, focal_length);
+    dtype fovy = 90.0;
+
+    Pt3 cam_origin;
+    Dir3 look_at(0.0,0.0,-1.0);
+    Dir3 cam_up(0.0, 1.0, 0.0);
+
+    Camera cam(cam_origin, look_at, cam_up, aspect_ratio, fovy, focal_length);
 
     HittableVec world;
     world.push(std::make_shared<Sphere>(Pt3(0.0,0.0,-1.0), 0.5));

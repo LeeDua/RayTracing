@@ -9,21 +9,23 @@ namespace RayTracing{
     class Camera
     {
     public:
-        explicit Camera(Pt3 ori, dtype viewport_width, dtype viewport_height, dtype focal_length):origin(ori){
-            horizontal = Vec3(viewport_width, 0, 0);
-            vertical = Vec3(0, viewport_height, 0);
-            lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0,0,focal_length);
+        explicit Camera(Pt3 ori, Dir3 look_at, Dir3 up, dtype aspect_ratio, dtype fovy, dtype focal):origin(ori),lookAt(look_at),up(up),focal(focal){
+            dtype height = tan(degree_to_radius(fovy)/2) * focal * 2.0;
+            dtype width = height * aspect_ratio;
+            vertical = up.normalized()*height;
+            horizontal = cross(lookAt, vertical).normalized() * width;
+            lookAt.normalize();
         };
         void getRay(dtype u, dtype v, Ray& ray) const{
-            ray.set(origin, lower_left_corner + u * horizontal + v * vertical - origin);
+            ray.set(origin,horizontal*(-0.5 + u) + vertical*(-0.5 + v) + lookAt*focal);
         }
         
     private:
         Pt3 origin;
-        Vec3 lower_left_corner;
-        Vec3 horizontal;
-        Vec3 vertical;
-
+        Dir3 lookAt;
+        Dir3 up;
+        dtype focal;
+        Dir3 horizontal, vertical;
     };
 }
 
