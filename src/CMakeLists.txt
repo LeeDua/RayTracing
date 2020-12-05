@@ -1,3 +1,9 @@
 
 add_executable(main main.cpp RayTracer.cpp)
-target_link_libraries(main libimg)
+find_package(OpenMP)
+
+target_link_libraries(main PUBLIC libimg)
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(main PUBLIC OpenMP::OpenMP_CXX libimg)
+endif()

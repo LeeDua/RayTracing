@@ -14,7 +14,7 @@
 
 #define PI 3.1415926535897932385
 #define MAX_RECURSIVE_DEPTH 50
-#define SAMPLE_PER_PIXEL 200
+#define SAMPLE_PER_PIXEL 50
 
 
 inline dtype degree_to_radius(dtype degree){

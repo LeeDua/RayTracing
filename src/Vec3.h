@@ -61,7 +61,7 @@ namespace RayTracing{
                 return gammaCorrection();
             }
             private:
-            Color3 gammaCorrection(){
+            Color3 gammaCorrection() const{
                 return Color3(sqrt((*this)[0]), sqrt((*this)[1]), sqrt((*this)[2]));
             }
             void clamp(){

@@ -18,6 +18,11 @@ namespace RayTracing{
         }        
     }
 
+    //vec vin "ends" at hit point; n is assumed to be unit vector
+    inline Vec3 reflect(const Vec3& vin, const Vec3& n){
+        return vin - 2*vin.dot(n)*n;
+    }
+
     class IMaterial {
         public:
             virtual void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const = 0;
@@ -59,14 +64,23 @@ namespace RayTracing{
                 color *= attenuation;
                 ray.updateDepthCounter();
             }
-        
         private:
             MatColor attenuation;
-            //vec vin "ends" at hit point; n is assumed to be unit vector
-            inline Vec3 reflect(const Vec3& vin, const Vec3& n) const{
-                return vin - 2*vin.dot(n)*n;
-            }
     };
+
+    class FuzzyReflectMat: public IMaterial{
+        public:
+            explicit FuzzyReflectMat(MatColor&& c, dtype fuzziness=0.0):attenuation(c),fuzziness(std::min(fuzziness,1.0)){};
+            void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
+                ray.set(hit_record.p, fuzziness*rand_double_in_unit_sphere()+reflect(ray.direction(), hit_record.n));
+                color *= attenuation;
+                ray.updateDepthCounter();
+            }        
+        private:
+            MatColor attenuation;
+            dtype fuzziness;
+            
+    };   
 
 }
 

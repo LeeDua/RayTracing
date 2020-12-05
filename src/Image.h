@@ -30,9 +30,6 @@ namespace RayTracing {
             void setColor(int i, int j, T value){
                 at(i,j) = value;
             }
-            void setColor(int i, int j, MatColor value){
-                setColor(i, j, value[0], value[1], value[2]);
-            }
             void setColor(int i, int j, dtype r, dtype g, dtype b){
                 at(i,j) = T(img_dtype(r*255.99), img_dtype(g*255.99), img_dtype(g*255.99));
             }

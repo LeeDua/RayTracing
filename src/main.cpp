@@ -6,6 +6,9 @@
 #include"Camera.h"
 #include"RayTracer.h"
 
+#include"omp.h"
+#include<chrono>
+
 using namespace RayTracing;
 
 void img_test(){
@@ -29,17 +32,28 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
     Dir3 cam_up(0.0, 1.0, 0.0);
 
     cam = Camera(cam_origin, look_at, cam_up, aspect_ratio, fovy, focal_length);
-    auto s1 = std::make_shared<Sphere>(Sphere(Pt3(0.0,0.0,-1.0), 0.5));
-    auto s2 = std::make_shared<Sphere>(Sphere(Pt3(0.0,-100.5,-1.0), 100.0));
+    auto center = std::make_shared<Sphere>(Sphere(Pt3(0.0,0.0,-1.0), 0.5));
+    auto ground = std::make_shared<Sphere>(Sphere(Pt3(0.0,-100.5,-1.0), 100.0));
+    auto left = std::make_shared<Sphere>(Sphere(Pt3(-1.0,0.0,-1.0), 0.5));
+    auto right = std::make_shared<Sphere>(Sphere(Pt3(1.0,0.0,-1.0), 0.5));
+    
 
-    mat_ptr mat1 = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
-    mat_ptr mat2 = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
+    mat_ptr diffust_mat = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
+    mat_ptr ground_mat = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
+    mat_ptr left_mat = std::make_shared<ReflectMat>(ReflectMat(MatColor(0.8,0.8,0.8)));
+    mat_ptr right_mat = std::make_shared<ReflectMat>(ReflectMat(MatColor(0.8,0.6,0.2)));
+    mat_ptr left_fuzzy_mat = std::make_shared<FuzzyReflectMat>(FuzzyReflectMat(MatColor(0.8,0.8,0.8),0.3));
+    mat_ptr right_fuzzy_mat = std::make_shared<FuzzyReflectMat>(FuzzyReflectMat(MatColor(0.8,0.6,0.2),1.0));
 
-    s1->material = mat1;
-    s2->material = mat2;
+    center->material=diffust_mat;
+    ground->material=ground_mat;
+    left->material=left_fuzzy_mat;
+    right->material=left_fuzzy_mat;
 
-    world.push(s1);
-    world.push(s2);
+    world.push(center);
+    world.push(ground);
+    world.push(left);
+    world.push(right);
 }
 
 void ray_test(){
@@ -80,34 +94,33 @@ void ray_tracer_test(){
     Camera cam;
     HittableVec world;
     naive_scene_setup(cam, world);
-    const int img_width = 800;
+    const int img_width = 400;
     const int img_height = (double)img_width / aspect_ratio;
     Image<RGB_t> img(img_width, img_height);    
-    
+    Image<MatColor> buffer(img_width, img_height);
     RayTracer ray_tracer;
-    
+    #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){
+        #pragma omp for nowait
         for(int i=0; i<img.width(); i++){
-            MatColor pixel_color;
-            int hit_count = 0;       
             for(int sampling=0;sampling<SAMPLE_PER_PIXEL; sampling++){
                 dtype du = rand_double();
                 dtype dv = rand_double();
                 dtype u = (double(i) + du) / (img_width-1);
                 dtype v = (double(j) + dv) / (img_height - 1);
                 Ray ray;
-                cam.getRay(u, v, ray);            
-                MatColor color = ray_tracer.trace(ray, world);
-                pixel_color += color;
-                if(color.length()>0.01){
-                    hit_count += 1;
-                }
+                cam.getRay(u, v, ray);                    
+                buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray, world);
             }
-            if(hit_count > 1){
-                pixel_color /= hit_count;
-            }
-            pixel_color = pixel_color.adjust();
-            img.setColor(i, img.height()-1-j, pixel_color);
+        }
+    }
+    
+    #pragma omp parrallel for collapse(2)
+    for(int j=0;j<img.height();j++){
+        for(int i=0;i<img.width();i++){
+            buffer.at(i,j) /= SAMPLE_PER_PIXEL;
+            const MatColor& c = buffer.at(i,j).adjust();
+            img.setColor(i,j,c[0],c[1],c[2]);
         }
     }
     // img.dumpPPM("naive_rt.ppm");
@@ -115,9 +128,14 @@ void ray_tracer_test(){
 }
 
 int main(){
+    auto start = std::chrono::steady_clock::now();
     // img_test();
     // ray_test();
     ray_tracer_test();
+
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "Time cost: " << elapsed_seconds.count() << std::endl;
 
   
     
