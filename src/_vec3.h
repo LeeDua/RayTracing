@@ -30,20 +30,26 @@ namespace RayTracing {
             e[2] += v.e[2];
             return *this;
         }
-        Vector3 &operator-=(const Vector3 &v) { return *this += (-v); }
+        Vector3& operator-=(const Vector3 &v) { return *this += (-v); }
         T dot(const Vector3 &v) const { return e[0] * v[0] + e[1] * v[1] + e[2] * v[2]; }
-        Vector3 &operator*=(const multi_type t) {
+        Vector3& operator*=(const multi_type t) {
             e[0] *= t;
             e[1] *= t;
             e[2] *= t;
             return *this;
         }
-        Vector3 &operator/=(const multi_type t) { return (*this *= (1.0 / t)); }
+        Vector3& operator*=(const Vector3& v){
+            e[0] *= v[0];
+            e[1] *= v[1];
+            e[2] *= v[2];
+            return *this;
+        }
+        Vector3& operator/=(const multi_type t) { return (*this *= (1.0 / t)); }
         void set(T e0, T e1, T e2){ e[0] = e0; e[1] = e1; e[2] = e2; }
         T square_sum() const { return dot(*this); }
         T length() const { return sqrt(square_sum()); }
         void normalize() { (*this) /= length(); }
-        Vector3 normalized() {
+        Vector3 normalized() const{
             T len = length();
             return Vector3(e[0] / len, e[1] / len, e[2] / len);
         }
@@ -78,7 +84,7 @@ namespace RayTracing {
 
         template <typename T>
         inline Vector3<T> operator*(const Vector3<T> &a, const Vector3<T> &b) {
-            return Vector3<T>(a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+            return Vector3<T>(a[0] * b[0], a[1] * b[1], a[2] * b[2]);
         }
 
         template <typename T>

@@ -9,7 +9,8 @@ namespace RayTracing{
     class Camera
     {
     public:
-        explicit Camera(Pt3 ori, Dir3 look_at, Dir3 up, dtype aspect_ratio, dtype fovy, dtype focal):origin(ori),lookAt(look_at),up(up),focal(focal){
+        Camera(){} 
+        Camera(Pt3 ori, Dir3 look_at, Dir3 up, dtype aspect_ratio, dtype fovy, dtype focal):origin(ori),lookAt(look_at),up(up),focal(focal){
             dtype height = tan(degree_to_radius(fovy)/2) * focal * 2.0;
             dtype width = height * aspect_ratio;
             vertical = up.normalized()*height;

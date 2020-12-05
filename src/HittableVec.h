@@ -6,9 +6,9 @@
 #include "IHittable.h"
 
 namespace RayTracing{
+    typedef std::shared_ptr<IHittable> obj_ptr;
     class HittableVec:public IHittable
     {    
-    typedef std::shared_ptr<IHittable> obj_ptr;
     public:
         std::vector<obj_ptr> objs;
         HittableVec(){};
@@ -16,8 +16,7 @@ namespace RayTracing{
         void clear(){ objs.clear(); }
 
         //ToDO: Should ret vector record ?
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=std::numeric_limits<dtype>::infinity()) const override{
-            
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0001, dtype maxDist=std::numeric_limits<dtype>::infinity()) const override{
             bool hit_once = false;
             for(const obj_ptr& optr: objs){
                 if(optr->hit(ray, record, minDist, maxDist)){
