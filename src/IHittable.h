@@ -16,7 +16,7 @@ namespace RayTracing{
         //n should be mannually normalized when set!
         Vec3 n;
         dtype t;
-        //if in normal and ray is in the same dir, ray is inside obj and normal direction should be inverted, the hit should be marked as normAgainstRay=false
+        //if normal and ray is in the same dir, ray is inside obj and normal direction should be inverted, the hit should be marked as normAgainstRay=false
         bool normAgainstRay=true;
         std::shared_ptr<IMaterial> material=nullptr;
     };

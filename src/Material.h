@@ -81,6 +81,35 @@ namespace RayTracing{
             dtype fuzziness;
             
     };   
+    
+    class RefractionMat: public IMaterial{
+    public:
+        explicit RefractionMat(dtype reflect_ratio):reflect_ratio(reflect_ratio){}
+        void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
+            dtype directional_reflect_ratio = hit_record.normAgainstRay ? reflect_ratio : 1.0/reflect_ratio;
+            dtype cos_in = -(ray.direction().dot(hit_record.n));
+            ASSERT(cos_in > 0);
+            dtype sin_in = sqrt(1 - cos_in * cos_in);
+            dtype sin_out = directional_reflect_ratio * sin_in;
+            if(sin_out > 1.0 || reflectance(cos_in, directional_reflect_ratio)>rand_double()){
+                ray.set(hit_record.p, reflect(ray.direction(), hit_record.n));
+            }
+            else{
+                dtype cos_out = sqrt(1 - sin_out * sin_out);
+                Dir3 refract_dir = -(ray.direction() + cos_in * hit_record.n) * sin_out - hit_record.n * cos_out;
+                ray.set(hit_record.p, refract_dir);
+            }
+            ray.updateDepthCounter();
+        }
+    private:
+        dtype reflect_ratio;
+        inline dtype reflectance(dtype cos_in, dtype directional_reflect_ratio) const{
+            dtype r0 = (directional_reflect_ratio-1)/(directional_reflect_ratio+1);
+            r0*=r0;
+            return r0+(1-r0)*pow((1-cos_in),5);
+        }
+    };   
+
 
 }
 

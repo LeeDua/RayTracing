@@ -40,15 +40,16 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
 
     mat_ptr diffust_mat = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
     mat_ptr ground_mat = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
-    mat_ptr left_mat = std::make_shared<ReflectMat>(ReflectMat(MatColor(0.8,0.8,0.8)));
-    mat_ptr right_mat = std::make_shared<ReflectMat>(ReflectMat(MatColor(0.8,0.6,0.2)));
+    mat_ptr left_reflect_mat = std::make_shared<ReflectMat>(ReflectMat(MatColor(0.8,0.8,0.8)));
+    mat_ptr right_reflect_mat = std::make_shared<ReflectMat>(ReflectMat(MatColor(0.8,0.6,0.2)));
     mat_ptr left_fuzzy_mat = std::make_shared<FuzzyReflectMat>(FuzzyReflectMat(MatColor(0.8,0.8,0.8),0.3));
     mat_ptr right_fuzzy_mat = std::make_shared<FuzzyReflectMat>(FuzzyReflectMat(MatColor(0.8,0.6,0.2),1.0));
+    mat_ptr refraction_mat = std::make_shared<RefractionMat>(RefractionMat(1.5));
 
     center->material=diffust_mat;
     ground->material=ground_mat;
-    left->material=left_fuzzy_mat;
-    right->material=left_fuzzy_mat;
+    left->material=refraction_mat;
+    right->material=right_reflect_mat;
 
     world.push(center);
     world.push(ground);
