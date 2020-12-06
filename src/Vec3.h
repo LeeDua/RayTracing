@@ -60,15 +60,16 @@ namespace RayTracing{
                 clamp();
                 return gammaCorrection();
             }
-            private:
-            Color3 gammaCorrection() const{
-                return Color3(sqrt((*this)[0]), sqrt((*this)[1]), sqrt((*this)[2]));
-            }
             void clamp(){
                 (*this)[0] = std::min((*this)[0], 1.0);
                 (*this)[1] = std::min((*this)[1], 1.0);
                 (*this)[2] = std::min((*this)[2], 1.0);
             }
+            private:
+            Color3 gammaCorrection() const{
+                return Color3(sqrt((*this)[0]), sqrt((*this)[1]), sqrt((*this)[2]));
+            }
+            
         };
 
         typedef Point3<dtype> Dir3;

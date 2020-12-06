@@ -13,10 +13,9 @@ namespace RayTracing{
             HitRecord hit_record;
             MatColor color(1.0,1.0,1.0);
             bool hit = recursiveTrace(ray, hit_record, color, scene);
-            if(hit)
-                return color;
-            else
-                return MatColor(0.0,0.0,0.0);
+            dtype mix = (1.0 + ray.direction()[1])*0.5;
+            MatColor mixed_color = (1.0-mix)*MatColor(1.0,1.0,1.0) + mix * MatColor(0.5,0.7,1.0);
+            return color * mixed_color;
         }
 
     private:

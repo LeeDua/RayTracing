@@ -24,6 +24,9 @@ namespace RayTracing {
             T& at(int i, int j){
                 return data[get_index(i,j)];
             }
+            // T* operator[](int i) {
+            //     return data + i * w;
+            // }
             T at(int i, int j) const{
                 return data(get_index(i,j));
             }
@@ -31,7 +34,7 @@ namespace RayTracing {
                 at(i,j) = value;
             }
             void setColor(int i, int j, dtype r, dtype g, dtype b){
-                at(i,j) = T(img_dtype(r*255.99), img_dtype(g*255.99), img_dtype(g*255.99));
+                at(i,j) = T((img_dtype)(r*255.99), (img_dtype)(g*255.99), (img_dtype)(b*255.99));
             }
             void setColor(int i, int j, img_dtype r, img_dtype g, img_dtype b){
                 at(i,j) = T(r, g, b);

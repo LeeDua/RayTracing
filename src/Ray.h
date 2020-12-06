@@ -21,7 +21,8 @@ namespace RayTracing{
 
         int updateDepthCounter(){ 
             ASSERT( recursiveDepth > 0 );
-            return --recursiveDepth; 
+            recursiveDepth -= 1;
+            return recursiveDepth; 
         }
         void die(){ recursiveDepth = 0; }
         bool isAlive(){return (recursiveDepth != 0); }

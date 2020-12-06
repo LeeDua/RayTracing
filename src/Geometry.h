@@ -30,11 +30,20 @@ class Sphere : public Geometry {
         Vec3 oToC = ray.origin() - center;
         dtype a = ray.direction().square_sum();
         dtype b = 2.0 * dot(oToC, ray.direction());
+        // dtype half_b = dot(oToC, ray.direction());
         dtype c = oToC.square_sum() - radius * radius;
         dtype discriminant = b * b - 4 * a * c;
+        // dtype discriminant = half_b * half_b - a * c;
         if (discriminant > 0) {
             record.t = (-b - sqrt(discriminant)) / (2.0 * a);
+            // record.t = ( (-half_b - sqrt(discriminant)) / a);
+            if ( record.t < minDist){
+                record.t = (-b + sqrt(discriminant)) / (2.0 * a);
+            }
             if( ! (record.t < maxDist && record.t > minDist) ){
+                // if(record.t < minDist){
+                //     std::cout << "DIST TOO SMALL !!!" << std::endl;
+                // }
                 return false;
             }
             record.p = ray.origin() + record.t * ray.direction();            
