@@ -21,9 +21,8 @@ namespace RayTracing{
         std::shared_ptr<IMaterial> material=nullptr;
     };
 
-    class IHittable
-    {
-    public:
+    class IHittable{
+        public:
         virtual bool hit(const Ray& ray, HitRecord& record, dtype minDist, dtype maxDist) const = 0;
     };
 }

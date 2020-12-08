@@ -1,14 +1,15 @@
 
+#include"omp.h"
+#include<chrono>
+#include<iomanip>
+
 #include"Vec3.h"
 #include"Image.h"
 #include"Geometry.h"
 #include"HittableVec.h"
 #include"Camera.h"
 #include"RayTracer.h"
-
-#include"omp.h"
-#include<chrono>
-#include<iomanip>
+#include"BVH.h"
 
 using namespace RayTracing;
 
@@ -204,7 +205,6 @@ int main(){
     // img_test();
     // ray_test();
     ray_tracer_test();
-
     
 
   
