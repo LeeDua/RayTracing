@@ -4,11 +4,13 @@
 #include<vector>
 #include<memory>
 #include "IHittable.h"
+#include "AABB.h"
+#include "Geometry.h"
 
 namespace RayTracing{
-    typedef std::shared_ptr<IHittable> obj_ptr;
-    // class HittableVec:public IHittable, public virtual IHasBox
-    class HittableVec:public IHittable
+    
+    typedef std::shared_ptr<Geometry> obj_ptr;
+    class HittableVec:public IHittable, public virtual IHasBox    
     {    
     public:
         std::vector<obj_ptr> objs;
@@ -29,13 +31,30 @@ namespace RayTracing{
             return hit_once;
         };
 
+        //Be careful! Init has to be called manually after the vec is setup so that bbox can be initialized
+        void init(){
+            constructBox();
+        }
 
-        // void constructBox() override{
-        //     dtype minx = -DINF, miny=-DINF, minz=DINF, maxx=DINF, maxy=DINF, maxz=DINF;
-        //     for(const obj_ptr& optr: objs){
-        //         // if(obj_ptr->box)
-        //     }
-        // }
+    private:
+        void constructBox() override{
+            Pt3 minPt(DINF,DINF,DINF);
+            Pt3 maxPt(-DINF,-DINF,-DINF);
+            for(const obj_ptr& optr: objs){
+                for(int i=0;i<3;i++){
+                    if(optr->box.p1[i] < minPt[i])
+                        minPt[i] = box.p1[i];
+                    if(optr->box.p2[i] < minPt[i])
+                        minPt[i] = box.p2[i];
+                    if(optr->box.p1[i] > maxPt[i])
+                        maxPt[i] = box.p1[i];
+                    if(optr->box.p2[i] > maxPt[i])
+                        maxPt[i] = box.p2[i];
+                }
+            }
+            box = AABB(minPt, maxPt);
+        }
+
     };
 }
 

@@ -122,7 +122,7 @@ void random_scene_setup(Camera& cam, HittableVec& world){
     auto reflect_sphere = std::make_shared<Sphere>(Pt3(4.0,1.0,0.0), 1.0);
     reflect_sphere->material = reflect_mat;
     world.push(reflect_sphere);
-    
+    world.init();
 }
 
 void ray_test(){

@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "IHittable.h"
+#include "AABB.h"
 #include "Vec3.h"
 #include "Ray.h"
 
@@ -14,18 +15,22 @@ namespace RayTracing {
 class IMaterial;
 typedef std::shared_ptr<IMaterial> mat_ptr;
 
-// class Geometry: public IHittable, public virtual IHasBox{
-class Geometry: public IHittable{    
+class Geometry: public virtual IHittable, public virtual IHasBox{  
     public:
         mat_ptr material=nullptr;
+        //use for bbox split
+        virtual Pt3 mid() = 0;
 };
 
-class Sphere : public Geometry {
+class Sphere : public Geometry{
    public:
     Pt3 center;
     dtype radius;
 
-    explicit Sphere(Pt3 c, dtype r):center(c),radius(r){};
+    explicit Sphere(Pt3 c, dtype r):center(c),radius(r){
+        ASSERT(radius>0);
+        constructBox();
+    };
 
     bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=DINF) const override {
         Vec3 oToC = ray.origin() - center;
@@ -53,6 +58,17 @@ class Sphere : public Geometry {
             return true;
         }
         return false;
+    }
+
+    void constructBox() override{
+        box = AABB(
+            center - Vec3(radius, radius, radius),
+            center + Vec3(radius, radius, radius)
+        );
+    }
+
+    Pt3 mid() override{
+        return center;
     }
     
 };
