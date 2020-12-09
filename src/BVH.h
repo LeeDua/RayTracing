@@ -9,7 +9,7 @@ namespace RayTracing{
 
     class BVHLeaf;
     class BVHBase: public virtual IHittable{};
-    class BVHNode: public virtual BVHBase, public virtual IHasBox{
+    class BVHNode: public BVHBase, public virtual IHasBox{
         public:
         BVHNode(const HittableVec& objs){
             ASSERT( (objs.box.p1- objs.box.p2).length() > 0.0001 );
@@ -17,6 +17,10 @@ namespace RayTracing{
             HittableVec left_objs;
             HittableVec right_objs;
             split(objs, left_objs, right_objs);
+            left_objs.init();
+            right_objs.init();
+            // std::cout << "Current node size: " << objs.size() << " ; child size: " << left_objs.size() << " " << right_objs.size() << std::endl;
+            ASSERT(left_objs.size() > 0 && right_objs.size() > 0);
             if(left_objs.size() > max_objs)
                 left = std::static_pointer_cast<BVHBase>(std::make_shared<BVHNode>(left_objs));
             else
@@ -27,10 +31,15 @@ namespace RayTracing{
                 right = std::static_pointer_cast<BVHBase>(std::make_shared<BVHLeaf>(std::move(right_objs)));
         }
 
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist, dtype maxDist) const override {
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0001, dtype maxDist=DINF) const override {
             // ASSERT(left.holds_alternative() && right.holds_alternative());
             if(box.hit(ray,record, minDist, maxDist)){
-                return ( left->hit(ray, record, minDist, maxDist) || right->hit(ray, record, minDist, maxDist));
+                //should traverse both left and right to deal with multiple ray-obj collision
+                bool hit_left = left->hit(ray, record, minDist, maxDist);
+                if(hit_left)
+                    maxDist = record.t;                
+                bool hit_right = right->hit(ray, record, minDist, maxDist);
+                return ( hit_left || hit_right );
             }
             return false;
         }
@@ -45,14 +54,24 @@ namespace RayTracing{
                 if( axis_minmax > minmax ){
                     minmax = axis_minmax;
                     axis = i;
-                    mid = std::min(box.p1[i], box.p2[i]) + minmax / 2;
                 }
             }
+            mid = std::min(box.p1[axis], box.p2[axis]) + minmax / 2;
             for(const obj_ptr& optr: original_list.objs){
-                if(optr->mid()[axis] < mid)
+                if( (optr->box.p1[axis]+optr->box.p2[axis])/2 < mid)
                     left_list.push(optr);
                 else
                     right_list.push(optr);
+            }
+            // deal with zero length list because theres one obj containing all the others
+            if(left_list.size() == 0 || right_list.size() == 0){
+                left_list.clear();
+                right_list.clear();
+                auto mid_iter = original_list.objs.begin() + original_list.size() / 2;
+                left_list.objs.resize(original_list.size()/2);
+                right_list.objs.resize(original_list.size() - original_list.size()/2);
+                std::copy(original_list.objs.begin(), mid_iter, left_list.objs.begin());
+                std::copy(mid_iter, original_list.objs.end(), right_list.objs.begin());
             }
         }
         
@@ -67,16 +86,22 @@ namespace RayTracing{
 
     };
 
-    class BVHLeaf: public virtual BVHBase{
+    class BVHLeaf: public BVHBase{
         public:
-        BVHLeaf(HittableVec&& objs):objs(objs){}
+        BVHLeaf(HittableVec&& objs):objs(objs){
+            // std::cout << "LEAF NODE: " << objs.size() << std::endl;
+        }
         bool hit(const Ray& ray, HitRecord& record, dtype minDist, dtype maxDist) const override {
-            return objs.hit(ray, record, minDist, maxDist);
+            if(objs.objs.size() == 1)
+                return objs.objs[0]->hit(ray, record, minDist, maxDist);
+            return objs.hit(ray, record, minDist, maxDist);            
         }
         
         private:
         HittableVec objs;
     };
+
+    typedef BVHNode BVHTree;
 
 }
 

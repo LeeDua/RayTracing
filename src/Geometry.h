@@ -18,8 +18,6 @@ typedef std::shared_ptr<IMaterial> mat_ptr;
 class Geometry: public virtual IHittable, public virtual IHasBox{  
     public:
         mat_ptr material=nullptr;
-        //use for bbox split
-        virtual Pt3 mid() = 0;
 };
 
 class Sphere : public Geometry{
@@ -65,12 +63,7 @@ class Sphere : public Geometry{
             center - Vec3(radius, radius, radius),
             center + Vec3(radius, radius, radius)
         );
-    }
-
-    Pt3 mid() override{
-        return center;
-    }
-    
+    }    
 };
 
 }  // namespace RayTracing

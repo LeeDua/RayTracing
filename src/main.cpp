@@ -55,7 +55,7 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
 
     ground->material=ground_mat;
     center->material=refraction_mat;
-    left->material=refraction_mat;
+    left->material=left_reflect_mat;
     // center->material=refraction_mat;
     right->material = diffuse_mat;
     // left->material=right_reflect_mat;
@@ -63,8 +63,8 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
 
     world.push(center);
     world.push(ground);
-    // world.push(left);
-    // world.push(right);
+    world.push(left);
+    world.push(right);
     // world.push(left_bubble);
 }
 
@@ -86,24 +86,27 @@ void random_scene_setup(Camera& cam, HittableVec& world){
     world.push(ground);
 
     const int obj_count = 11;
+    const int scale = 10;
     for(int a = -obj_count; a < obj_count; a++){
         for(int b = -obj_count; b < obj_count; b++){
-            dtype mat_rand = rand_double();
-            Pt3 center(a + 0.9*rand_double(), 0.2, b+0.9*rand_double());
-            auto sphere = std::make_shared<Sphere>(Sphere(center, 0.2));
-            if( (center-Pt3(4.0,0.2,0.0)).length() > 0.9 ){
-                mat_ptr shpere_mat;
-                if(mat_rand < 0.8){
-                    shpere_mat = std::make_shared<DiffuseMat>(rand_double_vec3());
+            for(int i=0;i<scale;i++){
+                dtype mat_rand = rand_double();
+                Pt3 center(a + 0.9*rand_double(), 0.2, b+0.9*rand_double());
+                auto sphere = std::make_shared<Sphere>(Sphere(center, 0.2));
+                if( (center-Pt3(4.0,0.2,0.0)).length() > 0.9 ){
+                    mat_ptr shpere_mat;
+                    if(mat_rand < 0.8){
+                        shpere_mat = std::make_shared<DiffuseMat>(rand_double_vec3());
+                    }
+                    else if(mat_rand < 0.95){
+                        shpere_mat = std::make_shared<FuzzyReflectMat>(rand_double_vec3(0.5,1.0), rand_double(0.0,0.5));
+                    }
+                    else{
+                        shpere_mat = std::make_shared<RefractionMat>(1.5);
+                    }
+                    sphere->material = shpere_mat;
+                    world.push(sphere);
                 }
-                else if(mat_rand < 0.95){
-                    shpere_mat = std::make_shared<FuzzyReflectMat>(rand_double_vec3(0.5,1.0), rand_double(0.0,0.5));
-                }
-                else{
-                    shpere_mat = std::make_shared<RefractionMat>(1.5);
-                }
-                sphere->material = shpere_mat;
-                world.push(sphere);
             }
         }
     }
@@ -122,7 +125,6 @@ void random_scene_setup(Camera& cam, HittableVec& world){
     auto reflect_sphere = std::make_shared<Sphere>(Pt3(4.0,1.0,0.0), 1.0);
     reflect_sphere->material = reflect_mat;
     world.push(reflect_sphere);
-    world.init();
 }
 
 void ray_test(){
@@ -132,7 +134,7 @@ void ray_test(){
     const int img_width = 400;
     const int img_height = (double)img_width / ASPECT_RATIO;
     Image<RGB_t> img(img_width, img_height);    
-    RayTracer ray_tracer;
+    RayTracer ray_tracer(world);
     
     for(int j = img_height-1; j >= 0;j--){
         for(int i=0; i<img.width(); i++){
@@ -142,7 +144,7 @@ void ray_test(){
             dtype v = double(j) / (img_height - 1);
             Ray ray;
             cam.getRay(u, v, ray);            
-            MatColor c = ray_tracer.trace(ray, world);
+            MatColor c = ray_tracer.trace(ray);
             img.setColor(i,img_height-1-j, c[0], c[1],c[2]);
         }
     }
@@ -160,8 +162,10 @@ void ray_tracer_test(){
     const int img_height = (double)img_width / ASPECT_RATIO;
     Image<RGB_t> img(img_width, img_height);    
     Image<MatColor> buffer(img_width, img_height);
-    RayTracer ray_tracer;
+    // RayTracer ray_tracer(world);
+    BVHRayTracer ray_tracer(world);
 
+    auto trace_start = std::chrono::steady_clock::now();
     #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){
         #pragma omp master
@@ -170,7 +174,7 @@ void ray_tracer_test(){
             auto current = std::chrono::steady_clock::now();
             std::chrono::duration<double> time_used = current-start;
             std::cout << "\rWork remained: " << std::setfill(' ') << std::setw(2) << int(remain_percentage*100.0) << " % " <<  std::setfill(' ') << std::setw(5) <<int(time_used.count()/(1-remain_percentage)*remain_percentage) << " s" << std::flush;
-        }        
+        }
         #pragma omp for nowait
         for(int i=0; i<img.width(); i++){
             for(int sampling=0;sampling<SAMPLE_PER_PIXEL; sampling++){
@@ -180,10 +184,13 @@ void ray_tracer_test(){
                 dtype v = (double(j) + dv) / (img_height - 1);
                 Ray ray;
                 cam.getRay(u, v, ray);                    
-                buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray, world);
+                buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray);
             }
         }
     }
+    auto trace_end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> trace_time = trace_end - trace_start;
+    std::cout << std::endl <<"Trace cost: " << trace_time.count() << std::endl;
     
     #pragma omp parrallel for collapse(2)
     for(int j=0;j<img.height();j++){

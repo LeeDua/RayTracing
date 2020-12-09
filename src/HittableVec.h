@@ -17,9 +17,8 @@ namespace RayTracing{
         HittableVec(){};
         void push(obj_ptr ptr){objs.push_back(ptr);}
         void clear(){ objs.clear(); }
-        int size() { return objs.size(); }
+        int size() const { return objs.size(); }
 
-        //ToDO: Should ret vector record ?
         bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0001, dtype maxDist=DINF) const override{
             bool hit_once = false;
             for(const obj_ptr& optr: objs){
@@ -43,13 +42,13 @@ namespace RayTracing{
             for(const obj_ptr& optr: objs){
                 for(int i=0;i<3;i++){
                     if(optr->box.p1[i] < minPt[i])
-                        minPt[i] = box.p1[i];
+                        minPt[i] = optr->box.p1[i];
                     if(optr->box.p2[i] < minPt[i])
-                        minPt[i] = box.p2[i];
+                        minPt[i] = optr->box.p2[i];
                     if(optr->box.p1[i] > maxPt[i])
-                        maxPt[i] = box.p1[i];
+                        maxPt[i] = optr->box.p1[i];
                     if(optr->box.p2[i] > maxPt[i])
-                        maxPt[i] = box.p2[i];
+                        maxPt[i] = optr->box.p2[i];
                 }
             }
             box = AABB(minPt, maxPt);
