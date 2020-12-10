@@ -86,7 +86,7 @@ void random_scene_setup(Camera& cam, HittableVec& world){
     world.push(ground);
 
     const int obj_count = 11;
-    const int scale = 10;
+    const int scale = 1;
     for(int a = -obj_count; a < obj_count; a++){
         for(int b = -obj_count; b < obj_count; b++){
             for(int i=0;i<scale;i++){
@@ -152,6 +152,31 @@ void ray_test(){
     img.dumpJPEG("ray_test.jpeg");
 }
 
+void naive_test(){
+    Camera cam;
+    HittableVec world;
+    // naive_scene_setup(cam, world);
+    random_scene_setup(cam, world);
+    const int img_width = IMG_WIDTH;
+    const int img_height = (double)img_width / ASPECT_RATIO;
+    Image<RGB_t> img(img_width, img_height);    
+    Image<MatColor> buffer(img_width, img_height);
+    RayTracer ray_tracer(world);
+    // RayTracer naive_ray_tracer(world);
+
+    Ray ray1, ray2;
+    cam.getRay(0.5,0.5,ray1);
+    // cam.getRay(0.5,0.5,ray2);
+    ray_tracer.trace(ray1);
+    // naive_ray_tracer.trace(ray1);
+    DEBUG_PRINT("Node hit       : " << node_count);
+    DEBUG_PRINT("AABB hit check : " << box_count);
+    DEBUG_PRINT("AABB hit true  : " << aabb_hit_count);
+    DEBUG_PRINT("Leaf hit       : " << leaf_count);
+    DEBUG_PRINT("Sphere hit     : " << sphere_count);
+    return;   
+}
+
 void ray_tracer_test(){
     auto start = std::chrono::steady_clock::now();
     Camera cam;
@@ -162,9 +187,9 @@ void ray_tracer_test(){
     const int img_height = (double)img_width / ASPECT_RATIO;
     Image<RGB_t> img(img_width, img_height);    
     Image<MatColor> buffer(img_width, img_height);
-    // RayTracer ray_tracer(world);
     BVHRayTracer ray_tracer(world);
-
+    // RayTracer ray_tracer(world);
+    
     auto trace_start = std::chrono::steady_clock::now();
     #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){
@@ -187,6 +212,7 @@ void ray_tracer_test(){
                 buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray);
             }
         }
+        
     }
     auto trace_end = std::chrono::steady_clock::now();
     std::chrono::duration<double> trace_time = trace_end - trace_start;
@@ -206,6 +232,12 @@ void ray_tracer_test(){
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::cout << std::endl <<"Time cost: " << elapsed_seconds.count() << std::endl;
+
+    DEBUG_PRINT("Node hit       : " << node_count);
+    DEBUG_PRINT("AABB hit check : " << box_count);
+    DEBUG_PRINT("AABB hit true  : " << aabb_hit_count);
+    DEBUG_PRINT("Leaf hit       : " << leaf_count);
+    DEBUG_PRINT("Sphere hit     : " << sphere_count);
 }
 
 int main(){

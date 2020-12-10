@@ -31,6 +31,9 @@ class Sphere : public Geometry{
     };
 
     bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=DINF) const override {
+        #ifdef DEBUG
+        sphere_count ++;
+        #endif
         Vec3 oToC = ray.origin() - center;
         dtype a = ray.direction().square_sum();
         dtype b = 2.0 * dot(oToC, ray.direction());

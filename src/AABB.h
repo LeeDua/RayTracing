@@ -11,7 +11,11 @@ namespace RayTracing{
         AABB(){}
         AABB(Pt3 p1, Pt3 p2):p1(p1),p2(p2){}
         bool hit(const Ray& ray, HitRecord& record, dtype minDist, dtype maxDist) const override {
-            dtype max_tmin = DINF, min_tmax = -DINF;
+            #ifdef DEBUG
+            box_count ++ ;
+            #endif
+
+            dtype max_tmin = -DINF, min_tmax = DINF;
             for(int i=0; i<3; i++){
                 dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
                 dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
@@ -22,8 +26,13 @@ namespace RayTracing{
                 if(tmax < min_tmax)
                     min_tmax = tmax;
             }
-            if(min_tmax<max_tmin && max_tmin>minDist && min_tmax<maxDist)
+            // DO NOT NEED TO CHECK IF T LIES IN [ MINDIST , MAXDIST ] !!!
+            if(max_tmin<min_tmax){            
+                #ifdef DEBUG
+                aabb_hit_count ++;
+                #endif
                 return true;
+            }
             return false;
         }
     };

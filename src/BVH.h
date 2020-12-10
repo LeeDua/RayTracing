@@ -32,6 +32,9 @@ namespace RayTracing{
         }
 
         bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0001, dtype maxDist=DINF) const override {
+            #ifdef DEBUG
+            node_count ++;
+            #endif
             // ASSERT(left.holds_alternative() && right.holds_alternative());
             if(box.hit(ray,record, minDist, maxDist)){
                 //should traverse both left and right to deal with multiple ray-obj collision
@@ -92,6 +95,9 @@ namespace RayTracing{
             // std::cout << "LEAF NODE: " << objs.size() << std::endl;
         }
         bool hit(const Ray& ray, HitRecord& record, dtype minDist, dtype maxDist) const override {
+            #ifdef DEBUG
+            leaf_count++;
+            #endif
             if(objs.objs.size() == 1)
                 return objs.objs[0]->hit(ray, record, minDist, maxDist);
             return objs.hit(ray, record, minDist, maxDist);            
