@@ -45,6 +45,11 @@ namespace RayTracing{
             public:
             using Vector3<dtype>::Vector3;
             Color3(const Vector3<dtype>& v):Color3<dtype>::Vector3(v){};
+            Color3(const Vector3<img_dtype>& c){
+                (*this)[0] = (dtype)(1.0/255.99*c[0]);
+                (*this)[1] = (dtype)(1.0/255.99*c[1]);
+                (*this)[2] = (dtype)(1.0/255.99*c[2]);
+            }
 
             Color3& operator+=(const Color3& v){
                 Vector3<dtype>::e[0] += v[0];
@@ -70,6 +75,17 @@ namespace RayTracing{
                 return Color3(sqrt((*this)[0]), sqrt((*this)[1]), sqrt((*this)[2]));
             }
             
+        };
+
+        template<>
+        class Color3<img_dtype>: public Vector3<img_dtype>{
+            public:
+            using Vector3<img_dtype>::Vector3;  
+            explicit Color3(const Color3<dtype> c){
+                (*this)[0] = (img_dtype)(255.99*c[0]);
+                (*this)[1] = (img_dtype)(255.99*c[1]);
+                (*this)[2] = (img_dtype)(255.99*c[2]);
+            }
         };
 
         typedef Point3<dtype> Dir3;

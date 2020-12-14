@@ -10,6 +10,7 @@
 #include"Camera.h"
 #include"RayTracer.h"
 #include"BVH.h"
+#include"Texture.h"
 
 using namespace RayTracing;
 
@@ -81,7 +82,7 @@ void random_scene_setup(Camera& cam, HittableVec& world){
     cam = Camera(cam_origin, look_at, cam_up, ASPECT_RATIO, fovy, focal_length);
 
     auto ground = std::make_shared<Sphere>(Sphere(Pt3(0.0,-1000.0,-0.0), 1000.0));
-    mat_ptr ground_mat = std::make_shared<DiffuseMat>(DiffuseMat(MatColor(0.5,0.5,0.5)));
+    mat_ptr ground_mat = std::make_shared<DiffuseMat>(MatColor(0.5,0.5,0.5));
     ground->material=ground_mat;
     world.push(ground);
 
@@ -125,6 +126,61 @@ void random_scene_setup(Camera& cam, HittableVec& world){
     auto reflect_sphere = std::make_shared<Sphere>(Pt3(4.0,1.0,0.0), 1.0);
     reflect_sphere->material = reflect_mat;
     world.push(reflect_sphere);
+}
+
+void final_scene_setup(Camera& cam, HittableVec& world){
+    dtype focal_length = 1.0;    
+    dtype fovy = 40.0;
+    Pt3 cam_origin(478, 278, -600);;
+    Dir3 look_at(-200,0,600);
+    Dir3 cam_up(0.0, 1.0, 0.0);
+    cam = Camera(cam_origin, look_at, cam_up, ASPECT_RATIO, fovy, focal_length);
+
+    // auto earth_sphere = std::make_shared<Sphere>(Pt3(400.0,200.0,400.0),100.0);
+    // auto one_diffuse = std::make_shared<DiffuseMat>(MatColor(1.0,1.0,1.0));
+    // auto earth_img = std::make_shared<ImgTexture>("earthmap.jpg");
+    // auto earth_texture = std::make_shared<ImgTextureDiffuseMat>(one_diffuse, earth_img);
+    // earth_sphere->material = earth_texture;
+    // world.push(earth_sphere);
+
+    auto diffuse_sphere = std::make_shared<Sphere>(Pt3(400.0,400.0,200.0),50.0);
+    auto diffuse_mat = std::make_shared<DiffuseMat>(MatColor(0.7,0.3,0.1));
+    diffuse_sphere->material = diffuse_mat;
+    world.push(diffuse_sphere);
+
+    auto glass_sphere = std::make_shared<Sphere>(Pt3(260.0,150.0,45.0),50.0);
+    auto refraction_mat = std::make_shared<RefractionMat>(1.5);
+    glass_sphere->material = refraction_mat;
+    world.push(glass_sphere);
+
+    auto blue_glass = std::make_shared<Sphere>(Pt3(360.0,150.0,145.0),70.0);
+    auto blue_texutre = std::make_shared<SolidColorTexture>(MatColor(0.2,0.4,0.9));
+    auto blue_glass_mat = std::make_shared<ColoredRefractionMat>(refraction_mat,blue_texutre);
+    blue_glass->material = blue_glass_mat;
+
+    auto metal_sphere = std::make_shared<Sphere>(Pt3(0.0,150.0,145.0),50.0);
+    auto metal_mat = std::make_shared<FuzzyReflectMat>(MatColor(0.8,0.8,0.9),1.0);
+    metal_sphere->material = metal_mat;
+    world.push(metal_sphere);
+
+    auto noise_sphere = std::make_shared<Sphere>(Pt3(220.0,280.0,300.0),80.0);
+    auto noise_mat = std::make_shared<ReflectMat>(MatColor(0.8,0.8,0.9));
+    noise_sphere->material = noise_mat;
+    world.push(noise_sphere);
+
+    auto light_sphere = std::make_shared<Sphere>(Pt3(123.0,423.0,524.0),50.0);
+    auto light_mat = std::make_shared<EmissiveMat>(MatColor(1.0,1.0,1.0));
+    light_sphere->material = light_mat;
+    world.push(light_sphere);
+
+    auto white_mat = std::make_shared<DiffuseMat>(MatColor(0.73,0.73,0.73));
+    int dots = 1000;
+    for(int i=0;i<dots;i++){
+        auto dot = std::make_shared<Sphere>(MatColor(rand_double_vec3(0.0,165.0)),10.0);
+        dot->material = white_mat;
+        world.push(dot);
+    }
+
 }
 
 void ray_test(){
@@ -182,7 +238,8 @@ void ray_tracer_test(){
     Camera cam;
     HittableVec world;
     // naive_scene_setup(cam, world);
-    random_scene_setup(cam, world);
+    // random_scene_setup(cam, world);
+    final_scene_setup(cam,world);
     const int img_width = IMG_WIDTH;
     const int img_height = (double)img_width / ASPECT_RATIO;
     Image<RGB_t> img(img_width, img_height);    
@@ -193,13 +250,6 @@ void ray_tracer_test(){
     auto trace_start = std::chrono::steady_clock::now();
     #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){
-        #pragma omp master
-        {
-            dtype remain_percentage = (double)j/img.height();
-            auto current = std::chrono::steady_clock::now();
-            std::chrono::duration<double> time_used = current-start;
-            std::cout << "\rWork remained: " << std::setfill(' ') << std::setw(2) << int(remain_percentage*100.0) << " % " <<  std::setfill(' ') << std::setw(5) <<int(time_used.count()/(1-remain_percentage)*remain_percentage) << " s" << std::flush;
-        }
         #pragma omp for nowait
         for(int i=0; i<img.width(); i++){
             for(int sampling=0;sampling<SAMPLE_PER_PIXEL; sampling++){
@@ -212,7 +262,13 @@ void ray_tracer_test(){
                 buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray);
             }
         }
-        
+        #pragma omp master
+        {
+            dtype remain_percentage = (double)(j+1)/img.height();
+            auto current = std::chrono::steady_clock::now();
+            std::chrono::duration<double> time_used = current-start;
+            std::cout << "\rWork remained: " << std::setfill(' ') << std::setw(2) << int(remain_percentage*100.0) << " % " <<  std::setfill(' ') << std::setw(5) <<int(time_used.count()/(1-remain_percentage)*remain_percentage) << " s" << " / " << std::setfill(' ') << std::setw(5) << int(time_used.count()) << std::flush;
+        }
     }
     auto trace_end = std::chrono::steady_clock::now();
     std::chrono::duration<double> trace_time = trace_end - trace_start;

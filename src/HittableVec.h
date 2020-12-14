@@ -2,14 +2,13 @@
 #define HITTABLEVEC_H
 
 #include<vector>
-#include<memory>
 #include "IHittable.h"
 #include "AABB.h"
 #include "Geometry.h"
 
 namespace RayTracing{
     
-    typedef std::shared_ptr<Geometry> obj_ptr;
+    typedef std::shared_ptr<IGeometry> obj_ptr;
     class HittableVec:public IHittable, public virtual IHasBox    
     {    
     public:

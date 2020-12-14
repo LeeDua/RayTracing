@@ -19,14 +19,15 @@ namespace RayTracing{
         }
 
         int updateDepthCounter(){ 
-            ASSERT( recursiveDepth > 0 );
             recursiveDepth -= 1;
             return recursiveDepth; 
         }
-        void die(){ recursiveDepth = 0; }
-        bool isAlive(){return (recursiveDepth != 0); }
+        void die(){ recursiveDepth = 0; hit_once = true; }
+        bool isAlive(){return (recursiveDepth > 0); }
             
-        
+        public:
+        bool hit_once = false;
+
         private:
         Pt3 _origin;
         Dir3 _direction;

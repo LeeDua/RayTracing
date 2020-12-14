@@ -10,12 +10,18 @@
 namespace RayTracing{
     class Ray;
     class IMaterial;
-      
+    
+    struct TexCoor{
+        dtype u;
+        dtype v;
+    };    
+
     struct HitRecord{
         Pt3 p;
         //n should be mannually normalized when set!
         Vec3 n;
         dtype t;
+        TexCoor uv;
         //if normal and ray is in the same dir, ray is inside obj and normal direction should be inverted, the hit should be marked as normAgainstRay=false
         bool normAgainstRay=true;
         std::shared_ptr<IMaterial> material=nullptr;

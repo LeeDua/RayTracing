@@ -13,11 +13,16 @@ namespace RayTracing {
         template <typename T=RGB_t>
         class Image {
         public:
-            explicit Image(int w, int h){
+            Image(){}
+            Image(int w, int h){
                 _width = w;
                 _height = h;
                 data = new T[w*h];
             }
+            Image(std::string img_path){
+                loadImg(img_path);
+            }
+
             ~Image() { delete[] data; }
             int height(){return _height;}
             int width(){return _width;}
@@ -28,7 +33,7 @@ namespace RayTracing {
             //     return data + i * w;
             // }
             T at(int i, int j) const{
-                return data(get_index(i,j));
+                return data[get_index(i,j)];
             }
             void setColor(int i, int j, T value){
                 at(i,j) = value;
@@ -65,6 +70,15 @@ namespace RayTracing {
             void dumpJPEG(std::string img_path="out.jpeg"){
                 stbi_write_jpg(img_path.c_str(), _width, _height, 3, (void*)data, 100);                
             }
+            bool loadImg(std::string filename){
+                int bytes = sizeof(T);
+                data = (T*)stbi_load(filename.c_str(), &_width, &_height, &bytes, 0);
+                if(data == nullptr){
+                    std::cerr << "Illegal image file path: " << filename << std::endl;
+                    abort();
+                }
+                return true;
+            }
 
 
         private:
@@ -73,7 +87,7 @@ namespace RayTracing {
             int _width, _height;
             std::fstream fs;
 
-            inline int get_index(int i,int j){return _width*j + i;}
+            inline int get_index(int i,int j) const {return _width*j + i;}
 
         };
     

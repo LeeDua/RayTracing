@@ -10,12 +10,11 @@ namespace RayTracing{
     {
     public:
         Camera(){} 
-        Camera(Pt3 ori, Dir3 look_at, Dir3 vup, dtype aspect_ratio, dtype fovy, dtype focal):origin(ori),lookAt(look_at),up(vup.normalized()),focal(focal){
+        Camera(Pt3 ori, Dir3 look_at, Dir3 vup, dtype aspect_ratio, dtype fovy, dtype focal):origin(ori),lookAt(look_at.normalized()),up(vup.normalized()),focal(focal){
             dtype height = tan(degree_to_radius(fovy)/2) * focal * 2.0;
             dtype width = height * aspect_ratio;
             vertical = up*height;
             horizontal = cross(lookAt, vertical).normalized() * width;
-            lookAt.normalize();
         };
         void getRay(dtype u, dtype v, Ray& ray) const{
             ray.set(origin,horizontal*(-0.5 + u) + vertical*(-0.5 + v) + lookAt*focal);

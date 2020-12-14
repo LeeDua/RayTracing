@@ -5,7 +5,7 @@
 #include "Ray.h"
 
 namespace RayTracing{
-    class AABB: IHittable{
+    class AABB: public virtual IHittable{
         public:
         Pt3 p1,p2;        
         AABB(){}
@@ -14,9 +14,22 @@ namespace RayTracing{
             #ifdef DEBUG
             box_count ++ ;
             #endif
+            dtype max_tmin,min_tmax;
+            checkBoxHit(ray, max_tmin, min_tmax);
+            // DO NOT NEED TO CHECK IF T LIES IN [ MINDIST , MAXDIST ] !!!
+            if(max_tmin<min_tmax){            
+                #ifdef DEBUG
+                aabb_hit_count ++;
+                #endif
+                return true;
+            }
+            return false;
+        }
 
-            dtype max_tmin = -DINF, min_tmax = DINF;
+        protected:
+        void checkBoxHit(const Ray& ray, dtype& max_tmin, dtype& min_tmax) const{
             for(int i=0; i<3; i++){
+                dtype max_tmin = -DINF, min_tmax = DINF;
                 dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
                 dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
                 dtype tmin = std::min(t1, t2);
@@ -26,14 +39,6 @@ namespace RayTracing{
                 if(tmax < min_tmax)
                     min_tmax = tmax;
             }
-            // DO NOT NEED TO CHECK IF T LIES IN [ MINDIST , MAXDIST ] !!!
-            if(max_tmin<min_tmax){            
-                #ifdef DEBUG
-                aabb_hit_count ++;
-                #endif
-                return true;
-            }
-            return false;
         }
     };
 

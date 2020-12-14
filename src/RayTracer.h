@@ -22,17 +22,21 @@ namespace RayTracing{
             HitRecord hit_record;
             MatColor color(1.0,1.0,1.0);
             recursiveTrace(ray, hit_record, color);
-            dtype mix = (1.0 + ray.direction()[1])*0.5;
-            MatColor mixed_color = (1.0-mix)*MatColor(1.0,1.0,1.0) + mix * MatColor(0.5,0.7,1.0);
-            return color * mixed_color;
+            // dtype mix = (1.0 + ray.direction()[1])*0.5;
+            // MatColor mixed_color = (1.0-mix)*MatColor(1.0,1.0,1.0) + mix * MatColor(0.5,0.7,1.0);
+            // return color * mixed_color;
+            if(ray.hit_once)
+                return color;
+            return MatColor();
         }
 
     private:
         void recursiveTrace(Ray& ray, HitRecord& hit_record, MatColor& color) const override{
             if(scene.hit(ray, hit_record)){
                 hit_record.material->interactWithLight(ray, hit_record, color);
+                ray.updateDepthCounter();
                 if(ray.isAlive()){
-                    recursiveTrace(ray, hit_record, color);
+                    return recursiveTrace(ray, hit_record, color);
                 }
             }
         }
@@ -50,6 +54,7 @@ namespace RayTracing{
         void recursiveTrace(Ray& ray, HitRecord& hit_record, MatColor& color) const override{
             if(tree->hit(ray, hit_record)){
                 hit_record.material->interactWithLight(ray, hit_record, color);
+                ray.updateDepthCounter();
                 if(ray.isAlive()){
                     recursiveTrace(ray, hit_record, color);
                 }             

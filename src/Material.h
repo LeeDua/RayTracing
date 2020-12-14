@@ -5,7 +5,7 @@
 
 
 namespace RayTracing{
-
+    
     inline Vec3 rand_double_vec3(dtype min=0.0, dtype max=1.0){
         return Vec3(rand_double(min,max), rand_double(min, max), rand_double(min,max));
     }
@@ -26,31 +26,20 @@ namespace RayTracing{
     class IMaterial {
         public:
             virtual void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const = 0;
-
+        private:
+        
     };
     
-    class SolidColorMat: public IMaterial{
-        public:
-            explicit SolidColorMat(MatColor&& c):solidColor(c){};
-            void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
-                color = color * solidColor;
-                ray.die();
-            }
-        private:
-            MatColor solidColor;
-    };
-
     class DiffuseMat: public IMaterial{
         public:
             explicit DiffuseMat(MatColor&& c):attenuation(c){};
             void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
                 Dir3 dir = hit_record.n + rand_double_in_unit_sphere();
-                if(dir.square_sum() < 1e-8)
+                if(dir.square_sum() < EPSILON)
                     ray.set(hit_record.p, hit_record.n);
                 else
                     ray.set(hit_record.p, dir);
                 color *= attenuation;
-                ray.updateDepthCounter();
             }
         private:
             MatColor attenuation;
@@ -62,7 +51,6 @@ namespace RayTracing{
             void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
                 ray.set(hit_record.p, reflect(ray.direction(), hit_record.n));
                 color *= attenuation;
-                ray.updateDepthCounter();
             }
         private:
             MatColor attenuation;
@@ -74,7 +62,6 @@ namespace RayTracing{
             void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
                 ray.set(hit_record.p, fuzziness*rand_double_in_unit_sphere()+reflect(ray.direction(), hit_record.n));
                 color *= attenuation;
-                ray.updateDepthCounter();
             }        
         private:
             MatColor attenuation;
@@ -83,7 +70,7 @@ namespace RayTracing{
     };   
     
     class RefractionMat: public IMaterial{
-    public:
+        public:
         explicit RefractionMat(dtype reflect_ratio):reflect_ratio(reflect_ratio){}
         void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
             dtype cos_in = -(ray.direction().normalized().dot(hit_record.n));
@@ -97,19 +84,72 @@ namespace RayTracing{
             else{
                 dtype cos_out = sqrt(1 - sin_out * sin_out);
                 Dir3 refract_dir = (ray.direction() + cos_in * hit_record.n).normalized() * sin_out - hit_record.n * cos_out;
-                ray.set(hit_record.p + refract_dir.normalized()*1e-6, refract_dir);
+                ray.set(hit_record.p + refract_dir.normalized()*EPSILON_MORE, refract_dir);
             }
-            ray.updateDepthCounter();
         }
-    private:
+        private:
         dtype reflect_ratio;
         inline dtype reflectance(dtype cos_in, dtype directional_reflect_ratio) const{
             dtype r0 = (1-directional_reflect_ratio)/(directional_reflect_ratio+1);
             r0*=r0;
             return r0+(1-r0)*pow((1.0-cos_in),5.0);
         }
-    };   
+    };
 
+    class EmissiveMat: public IMaterial{
+        public:
+        EmissiveMat(MatColor&& c):lightColor(c){};
+        void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
+            color += lightColor;
+            ray.die();
+        }
+        private:
+        MatColor lightColor;
+    };
+
+    class CheckerMat: private DiffuseMat{
+        public:
+        CheckerMat(MatColor&& c1, MatColor&& c2):c1(c1),c2(c2),DiffuseMat(MatColor(1.0,1.0,1.0)){}  
+        void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
+            const Pt3& hit_pt = hit_record.p;
+            dtype scale = 10.0;
+            dtype sines = std::sin(hit_pt[0]*scale) * std::sin(hit_pt[1]*scale) * std::sin(hit_pt[2]*scale);
+            DiffuseMat::interactWithLight(ray, hit_record, color);
+            if(sines>0)color*= c1;
+            else color*= c2;
+        }
+        private:
+        MatColor c1,c2;
+    };
+
+    class RandomScatterMat: public IMaterial{
+        public:
+        RandomScatterMat(){};
+        virtual void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const{
+            //TODO Check how many times this mat is triggered in DEBUG MODE
+            ray.set( hit_record.p, rand_double_in_unit_sphere());
+        }
+    };
+
+    template<class BaseMat, class Texture>
+    class TexturedMat: public IMaterial{
+        typedef std::shared_ptr<BaseMat> mat_ptr;
+        typedef std::shared_ptr<Texture> tex_ptr;
+        public:
+        explicit TexturedMat(mat_ptr mp, tex_ptr tp):mat_pointer(mp),tex_pointer(tp){};
+        void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
+            color *= tex_pointer->at(hit_record.uv.u, hit_record.uv.v);
+            mat_pointer->interactWithLight(ray, hit_record, color);
+        }
+        private:
+        mat_ptr mat_pointer;
+        tex_ptr tex_pointer;
+    };
+
+    typedef TexturedMat<RefractionMat, SolidColorTexture> ColoredRefractionMat;
+    typedef TexturedMat<DiffuseMat, ImgTexture> ImgTextureDiffuseMat;
+    //TODO: Will this cause wierd (black) color if ray is scattered many times in side the bound ?
+    typedef TexturedMat<RandomScatterMat, SolidColorTexture> ColoredRandomScatterMat;
 
 }
 
