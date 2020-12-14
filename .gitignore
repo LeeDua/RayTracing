@@ -1,5 +1,6 @@
 *.ppm
 *.jpeg
+*.jpg
 results/
 build/
 .vscode/

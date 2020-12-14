@@ -24,8 +24,8 @@ namespace RayTracing {
             }
 
             ~Image() { delete[] data; }
-            int height(){return _height;}
-            int width(){return _width;}
+            int height() const {return _height;}
+            int width() const {return _width;}
             T& at(int i, int j){
                 return data[get_index(i,j)];
             }

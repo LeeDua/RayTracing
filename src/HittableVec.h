@@ -7,7 +7,6 @@
 #include "Geometry.h"
 
 namespace RayTracing{
-    
     typedef std::shared_ptr<IGeometry> obj_ptr;
     class HittableVec:public IHittable, public virtual IHasBox    
     {    

@@ -12,10 +12,15 @@ static int leaf_count = 0;
 static int box_count = 0;
 static int sphere_count = 0;
 static int aabb_hit_count = 0;
+static int rect_hit_count = 0;
+static int light_hit_count = 0;
 #else
 #define ASSERT( x )  
 #define DEBUG_PRINT( x )
 #endif
+
+// #define COLORED_BG
+
 
 
 #include "types.h"
@@ -28,7 +33,7 @@ static int aabb_hit_count = 0;
 
 #define PI 3.1415926535897932385
 #define MAX_RECURSIVE_DEPTH 50
-#define SAMPLE_PER_PIXEL 1000
+#define SAMPLE_PER_PIXEL 50
 #define IMG_WIDTH 400
 // #define ASPECT_RATIO (3.0 / 2.0)
 // #define ASPECT_RATIO (16.0 / 9.0)

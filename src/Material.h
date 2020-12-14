@@ -100,8 +100,11 @@ namespace RayTracing{
         public:
         EmissiveMat(MatColor&& c):lightColor(c){};
         void interactWithLight(Ray& ray, const HitRecord& hit_record, MatColor& color) const override{
-            color += lightColor;
+            color *= lightColor;
             ray.die();
+            #ifdef DEBUG
+            light_hit_count ++;
+            #endif
         }
         private:
         MatColor lightColor;

@@ -57,7 +57,7 @@ namespace RayTracing {
                 }
                 ASSERT(material != nullptr);
                 record.material = material;
-                record.uv = getUV(record.p);
+                record.uv = getUV(record.n);
                 return true;
             }
             return false;
@@ -110,14 +110,17 @@ namespace RayTracing {
 
     class AxisAlignedRect: private AABB, public IGeometry{
         public:
-        explicit AxisAlignedRect(Pt3 p1, Pt3 p2, int axis, dtype thick=1e-3):axis(axis){
-            if( abs(p1[axis] - p2[axis]) > EPSILON){
+        explicit AxisAlignedRect(Pt3 _p1, Pt3 _p2, int axis, dtype thick=1e-3):axis(axis){
+            if( abs(_p1[axis] - _p2[axis]) > EPSILON){
                 std::cerr << "Illegal usage of AxisAlignedRect axis constructor, p1 and p2 should match on the set axis" << std::endl;
                 abort();
             }
-            p1[axis] -= thick;
-            p2[axis] += thick;
-            box = AABB(p1, p2);
+            AABB::p1 = _p1;
+            AABB::p2 = _p2;
+            AABB::p1[axis] -= thick;
+            AABB::p2[axis] += thick;
+            AxisAlignedRect::AABB(AABB::p1, AABB::p2);
+            constructBox();
         }
         bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=DINF) const override {
             dtype max_tmin,min_tmax;
@@ -141,6 +144,9 @@ namespace RayTracing {
                 record.normAgainstRay = false;
                 record.n *= -1.0;
             }
+            #ifdef DEBUG
+            rect_hit_count ++;
+            #endif            
             return true;
         }
         void constructBox() override{
@@ -152,9 +158,7 @@ namespace RayTracing {
 
         private:
         int axis;
-
     };
-
 
 }  // namespace RayTracing
 

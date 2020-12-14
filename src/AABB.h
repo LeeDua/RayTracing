@@ -28,16 +28,20 @@ namespace RayTracing{
 
         protected:
         void checkBoxHit(const Ray& ray, dtype& max_tmin, dtype& min_tmax) const{
+            max_tmin = -DINF;
+            min_tmax = DINF;
             for(int i=0; i<3; i++){
-                dtype max_tmin = -DINF, min_tmax = DINF;
-                dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
-                dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
-                dtype tmin = std::min(t1, t2);
-                dtype tmax = std::max(t1, t2);
-                if(tmin > max_tmin)
-                    max_tmin = tmin;
-                if(tmax < min_tmax)
-                    min_tmax = tmax;
+                if(ray.direction()[i] != 0){
+                    // TODO: DO NOT CHECK DEAL WITH DIRECTION[I] == 0 CORRECTLY!
+                    dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
+                    dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
+                    dtype tmin = std::min(t1, t2);
+                    dtype tmax = std::max(t1, t2);
+                    if(tmin > max_tmin)
+                        max_tmin = tmin;
+                    if(tmax < min_tmax)
+                        min_tmax = tmax;
+                }
             }
         }
     };
