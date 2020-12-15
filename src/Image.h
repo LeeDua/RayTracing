@@ -4,7 +4,7 @@
 
 #include<fstream>
 #include<vector>
-#include"Vec3.h"
+#include"Vec.h"
 #include"stb_image.h"
 #include"stb_image_write.h"
 

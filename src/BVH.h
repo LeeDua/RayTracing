@@ -1,7 +1,6 @@
 #ifndef BVH_H
 #define BVH_H
 
-#include <variant>
 #include "HittableVec.h"
 #include "AABB.h"
 

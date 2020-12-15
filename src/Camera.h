@@ -3,7 +3,7 @@
 
 #include"Common.h"
 #include"Ray.h"
-#include"Vec3.h"
+#include"Vec.h"
 
 namespace RayTracing{
     class Camera

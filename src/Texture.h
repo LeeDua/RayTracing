@@ -25,7 +25,7 @@ namespace RayTracing{
         public:
         ImgTexture(std::string img_path):Image(img_path){};
         MatColor at(dtype u, dtype v) const override{
-            return Image::at(u*(dtype)Image::width(),(1.0-v)*(dtype)Image::height());
+            return toDouble(Image::at(u*(dtype)Image::width(),(1.0-v)*(dtype)Image::height()));
         }
     };
 

@@ -4,7 +4,7 @@
 #include<memory>
 
 #include "Common.h"
-#include "Vec3.h"
+#include "Vec.h"
 
 
 namespace RayTracing{

@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "Vec3.h"
+#include "Vec.h"
 
 namespace RayTracing{
     class Ray{
@@ -10,8 +10,8 @@ namespace RayTracing{
         Ray(Pt3 ori, Dir3 dir):
             _origin(ori), _direction(dir.normalized()){};
         
-        Pt3 origin() const { return _origin;}
-        Dir3 direction() const { return _direction;}
+        inline Pt3 origin() const { return _origin;}
+        inline Dir3 direction() const { return _direction;}
         void set(const Pt3& ori, const Dir3& dir){ _origin = ori; _direction = dir.normalized(); }
 
         Vec3 at(multi_type t) const {

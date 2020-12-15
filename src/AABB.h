@@ -1,7 +1,7 @@
 #ifndef AABB_H
 #define AABB_H
 
-#include "Vec3.h"
+#include "Vec.h"
 #include "Ray.h"
 
 namespace RayTracing{
@@ -31,8 +31,8 @@ namespace RayTracing{
             max_tmin = -DINF;
             min_tmax = DINF;
             for(int i=0; i<3; i++){
-                if(ray.direction()[i] != 0){
-                    // TODO: DO NOT CHECK DEAL WITH DIRECTION[I] == 0 CORRECTLY!
+                // if(ray.direction()[i] != 0){
+                    // TODO: DO NOT DEAL WITH DIRECTION[I] == 0 CORRECTLY!
                     dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
                     dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
                     dtype tmin = std::min(t1, t2);
@@ -41,7 +41,7 @@ namespace RayTracing{
                         max_tmin = tmin;
                     if(tmax < min_tmax)
                         min_tmax = tmax;
-                }
+                // }
             }
         }
     };

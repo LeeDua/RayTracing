@@ -3,7 +3,7 @@
 #include<chrono>
 #include<iomanip>
 
-#include"Vec3.h"
+#include"Vec.h"
 #include"Image.h"
 #include"Geometry.h"
 #include"HittableVec.h"
@@ -268,13 +268,13 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     world.push(light);
     
 
-    // auto white_mat = std::make_shared<DiffuseMat>(MatColor(0.73,0.73,0.73));
-    // const int dots = 1000;
-    // for(int i=0;i<dots;i++){
-    //     auto dot = std::make_shared<Sphere>(MatColor(rand_double_vec3(0.0,165.0))+Vec3(-100.0,270.0,395.0),10.0);
-    //     dot->material = white_mat;
-    //     world.push(dot);
-    // }
+    auto white_mat = std::make_shared<DiffuseMat>(MatColor(0.73,0.73,0.73));
+    const int dots = 1000;
+    for(int i=0;i<dots;i++){
+        auto dot = std::make_shared<Sphere>(MatColor(rand_double_vec3(0.0,165.0))+Vec3(-100.0,270.0,395.0),10.0);
+        dot->material = white_mat;
+        world.push(dot);
+    }
 
     auto green_mat = std::make_shared<DiffuseMat>(MatColor(0.48,0.83,0.53));
     // const int boxes = 20;
@@ -290,10 +290,10 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     //         createBox(Pt3(x0,y0,z0), Pt3(x1,y1,z1), world, green_mat);
     //     }
     // }
-    createBox(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,20.0,1000.0), world, green_mat);
-    // auto ground = std::make_shared<AxisAlignedRect>(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,0.0,1000.0),1);
-    // ground->material = green_mat;
-    // world.push(ground);
+    // createBox(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,20.0,1000.0), world, green_mat);
+    auto ground = std::make_shared<AxisAlignedRect>(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,0.0,1000.0),1);
+    ground->material = green_mat;
+    world.push(ground);
 
 
     auto boundary = std::make_shared<Sphere>(Pt3(0.0,0.0,0.0),5000.0);
@@ -408,8 +408,10 @@ void ray_tracer_test(){
     for(int j=0;j<img.height();j++){
         for(int i=0;i<img.width();i++){
             buffer.at(i,j) /= SAMPLE_PER_PIXEL;
-            MatColor c = buffer.at(i,j).adjust();
-            img.setColor(i,j,c[0],c[1],c[2]);
+            // MatColor c = buffer.at(i,j).adjust();
+            adjustColor(buffer.at(i,j));
+            RGB_t pixel = toRGB(buffer.at(i,j));
+            img.setColor(i,j,pixel);
         }
     }
     // img.dumpPPM("random_scene.ppm");

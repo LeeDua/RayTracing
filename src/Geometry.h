@@ -6,7 +6,7 @@
 
 #include "IHittable.h"
 #include "AABB.h"
-#include "Vec3.h"
+#include "Vec.h"
 #include "Ray.h"
 #include "Texture.h"
 
@@ -136,7 +136,7 @@ namespace RayTracing {
             AABB::p2 = _p2;
             AABB::p1[axis] -= thick;
             AABB::p2[axis] += thick;
-            AxisAlignedRect::AABB(AABB::p1, AABB::p2);
+            // AxisAlignedRect::AABB(AABB::p1, AABB::p2);
             constructBox();
         }
         bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override {
