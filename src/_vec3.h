@@ -16,7 +16,12 @@ namespace RayTracing {
     public:
         Vector3() { memset(e, 0, sizeof(T) * 3); }
         Vector3(T e0, T e1, T e2) : e{e0, e1, e2} {};
-        Vector3(const Vector3<T>& v){ memcpy(e, &v, sizeof (T) * 3);}
+        Vector3(const Vector3<T>& v){ 
+            // memcpy(e, &v, sizeof (T) * 3);
+            e[0] = v.e[0];
+            e[1] = v.e[1];
+            e[2] = v.e[2];
+        }
         // Vector3(Vector3<T>&& v){ e = std::move(v.e);}
         T x() const { return e[0]; }
         T y() const { return e[1]; }
