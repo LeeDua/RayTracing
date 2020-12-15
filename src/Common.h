@@ -33,13 +33,14 @@ static int light_hit_count = 0;
 
 #define PI 3.1415926535897932385
 #define MAX_RECURSIVE_DEPTH 50
-#define SAMPLE_PER_PIXEL 50
+#define SAMPLE_PER_PIXEL 150
 #define IMG_WIDTH 400
 // #define ASPECT_RATIO (3.0 / 2.0)
 // #define ASPECT_RATIO (16.0 / 9.0)
 #define ASPECT_RATIO 1.0
 #define EPSILON_MORE 1e-6
 #define EPSILON 1e-8
+#define MIN_HIT_DIST 1e-4
 
 
 inline dtype degree_to_radius(dtype degree){

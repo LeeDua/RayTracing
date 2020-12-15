@@ -31,7 +31,7 @@ namespace RayTracing {
             constructBox();
         };
 
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=DINF) const override {
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override {
             #ifdef DEBUG
             sphere_count ++;
             #endif
@@ -41,14 +41,18 @@ namespace RayTracing {
             dtype c = oToC.square_sum() - radius * radius;
             dtype discriminant = b * b - 4 * a * c;
             if (discriminant > 0) {
-                record.t = (-b - sqrt(discriminant)) / (2.0 * a);
-                if ( record.t < minDist){
-                    record.t = (-b + sqrt(discriminant)) / (2.0 * a);
+                dtype t = (-b - sqrt(discriminant)) / (2.0 * a);
+                if ( t < minDist){
+                    t = (-b + sqrt(discriminant)) / (2.0 * a);
                 }
-                if( ! (record.t < maxDist && record.t > minDist) ){
+                // Allow same maxDist for multiple hit check on the same obj (e.g boundary check for inside fog)
+                if( ! ( t < maxDist && t > minDist) ){
                     return false;
                 }
-                record.p = ray.origin() + record.t * ray.direction();
+                // only write record here to avoid dirty write
+                record.t = t;
+                // record.p = ray.origin() + record.t * ray.direction();
+                record.p = ray.at(record.t);
                 ASSERT(abs((record.p-center).square_sum()-radius*radius)<0.01);
                 record.n = (record.p - center).normalized();
                 if(record.n.dot(ray.direction())>0){
@@ -79,24 +83,32 @@ namespace RayTracing {
 
     class ParticipatingMedia: public IGeometry{
         typedef std::shared_ptr<IGeometry> bound_ptr;
+        public:
         ParticipatingMedia(bound_ptr bound, dtype density):bound(bound), inverse_density(-1.0/density){
             constructBox();
         }
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=DINF) const override {
-            bound->hit(ray, record, minDist, maxDist);
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override {
+            HitRecord boundary_hit;
+            // should be inside boundary, NOTE DINF is used as maxDist because we are only testing whether the origin of ray is inside the boundary
+            bool inside_boundary = bound->hit(ray, boundary_hit, minDist, DINF);
+            if(!inside_boundary) return false;
             dtype dist = inverse_density * log(rand_double());
             // ASSUMING DIST IS SMALL AND WILL NOT CAUSE THE RAY HIT THE BOUND MORE THAN ONCE
             // fail to travel through, scatter in all dir
-            if(record.t > dist){
-                record.t = dist;
-                record.p = ray.origin() + dist * ray.direction();
+            // Check dist <= previous nearest hit, allowing equal because the ray may hit the boundary before
+            // if other objs are nearer than dist, the following hit check after particapating media will overide hit record, so it's totally fine!
+            if( dist < boundary_hit.t && (dist < maxDist || abs(dist-maxDist)<EPSILON_MORE)){
+                record.t = dist;    
+                // Normal dir does not matter
                 ASSERT( material != nullptr );
                 record.material = material;
-                // Normal dir does not matter
+                // record.p = ray.origin() + record.t * ray.direction();
+                record.p = ray.at(record.t);
+                return true;
             }
-            //simply travel through to the bound hit point
-            return true;
-        }        
+            //simply do nothing to the passed in record and let other objs in scene to test hit            
+            return false;
+        }
         void constructBox() override{
             box = bound->box;
         }
@@ -122,7 +134,7 @@ namespace RayTracing {
             AxisAlignedRect::AABB(AABB::p1, AABB::p2);
             constructBox();
         }
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0, dtype maxDist=DINF) const override {
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override {
             dtype max_tmin,min_tmax;
             AABB::checkBoxHit(ray, max_tmin, min_tmax);
             if(min_tmax < max_tmin)
@@ -133,7 +145,8 @@ namespace RayTracing {
                 record.t = min_tmax;
             else
                 record.t = max_tmin;
-            record.p = record.t * ray.direction() + ray.origin();
+            // record.p = record.t * ray.direction() + ray.origin();
+            record.p = ray.at(record.t);
             ASSERT( material != nullptr );
             record.material = material;
             Pt3 mid = (box.p1 + box.p2) / 2;

@@ -17,7 +17,7 @@ namespace RayTracing{
         void clear(){ objs.clear(); }
         int size() const { return objs.size(); }
 
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0001, dtype maxDist=DINF) const override{
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override{
             bool hit_once = false;
             for(const obj_ptr& optr: objs){
                 if(optr->hit(ray, record, minDist, maxDist)){

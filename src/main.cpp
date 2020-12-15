@@ -59,6 +59,7 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
     auto left = std::make_shared<Sphere>(Pt3(-1.0,0.0,-1.0), 0.5);
     auto left_bubble = std::make_shared<Sphere>(Pt3(-1.0,0.0,-1.0), 0.45);
     auto right = std::make_shared<Sphere>(Pt3(1.0,0.0,-1.0), 0.5);
+    auto fog_sphere = std::make_shared<ParticipatingMedia>(center,20.0);
     
 
     // mat_ptr diffuse_mat = std::make_shared<DiffuseMat>(MatColor(0.5,0.5,0.5));
@@ -72,6 +73,11 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
     mat_ptr right_fuzzy_mat = std::make_shared<FuzzyReflectMat>(MatColor(0.8,0.6,0.2),1.0);
     mat_ptr refraction_mat = std::make_shared<RefractionMat>(1.5);
     mat_ptr bubble_refract_mat = std::make_shared<RefractionMat>(1.0/1.5);
+   
+    auto random_scatter_mat = std::make_shared<RandomScatterMat>();
+    // auto solid_tex = std::make_shared<SolidColorTexture>(MatColor(1.0,1.0,1.0));
+    auto solid_tex = std::make_shared<SolidColorTexture>(MatColor(0.2,0.4,0.9));
+    mat_ptr fog_mat = std::make_shared<ColoredRandomScatterMat>(random_scatter_mat, solid_tex);
 
     auto one_diffuse = std::make_shared<DiffuseMat>(MatColor(1.0,1.0,1.0));
     auto earth_img = std::make_shared<ImgTexture>("../earthmap.jpg");
@@ -82,16 +88,18 @@ void naive_scene_setup(Camera& cam, HittableVec& world){
 
     ground->material=ground_mat;
     center->material=ground_mat;
-    left->material=left_reflect_mat;
+    fog_sphere->material = fog_mat;
+    left->material=right_fuzzy_mat;
     // center->material=refraction_mat;
     right->material = left_fuzzy_mat;
     // left->material=right_reflect_mat;
     // left_bubble->material=bubble_refract_mat;
 
-    world.push(center);
+    // world.push(center);
+    world.push(fog_sphere);
     world.push(ground);
-    world.push(left);
-    world.push(right);
+    // world.push(left);
+    // world.push(right);
     // world.push(left_bubble);
 }
 
@@ -232,10 +240,17 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     world.push(glass_sphere);
 
     auto blue_glass = std::make_shared<Sphere>(Pt3(360.0,150.0,145.0),70.0);
-    auto blue_texutre = std::make_shared<SolidColorTexture>(MatColor(0.2,0.4,0.9));
-    auto blue_glass_mat = std::make_shared<ColoredRefractionMat>(refraction_mat,blue_texutre);
-    blue_glass->material = blue_glass_mat;
+    blue_glass->material = refraction_mat;
     world.push(blue_glass);
+
+    auto blue_fog = std::make_shared<ParticipatingMedia>(blue_glass, 0.2);
+    auto random_scatter_mat = std::make_shared<RandomScatterMat>();
+    // auto solid_tex = std::make_shared<SolidColorTexture>(MatColor(1.0,1.0,1.0));
+    auto blue_texutre = std::make_shared<SolidColorTexture>(MatColor(0.2,0.4,0.9));
+    auto blue_fog_mat = std::make_shared<ColoredRandomScatterMat>(random_scatter_mat, blue_texutre);
+    blue_fog->material = blue_fog_mat;
+    world.push(blue_fog);
+
 
     auto metal_sphere = std::make_shared<Sphere>(Pt3(0.0,150.0,145.0),50.0);
     auto metal_mat = std::make_shared<FuzzyReflectMat>(MatColor(0.8,0.8,0.9),1.0);
@@ -243,7 +258,7 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     world.push(metal_sphere);
 
     auto noise_sphere = std::make_shared<Sphere>(Pt3(220.0,280.0,300.0),80.0);
-    auto noise_mat = std::make_shared<ReflectMat>(MatColor(0.8,0.8,0.9));
+    auto noise_mat = std::make_shared<DiffuseMat>(MatColor(0.8,0.8,0.9));
     noise_sphere->material = noise_mat;
     world.push(noise_sphere);
 
@@ -253,28 +268,41 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     world.push(light);
     
 
-    auto white_mat = std::make_shared<DiffuseMat>(MatColor(0.73,0.73,0.73));
-    const int dots = 1000;
-    for(int i=0;i<dots;i++){
-        auto dot = std::make_shared<Sphere>(MatColor(rand_double_vec3(0.0,165.0))+Vec3(-100.0,270.0,395.0),10.0);
-        dot->material = white_mat;
-        world.push(dot);
-    }
+    // auto white_mat = std::make_shared<DiffuseMat>(MatColor(0.73,0.73,0.73));
+    // const int dots = 1000;
+    // for(int i=0;i<dots;i++){
+    //     auto dot = std::make_shared<Sphere>(MatColor(rand_double_vec3(0.0,165.0))+Vec3(-100.0,270.0,395.0),10.0);
+    //     dot->material = white_mat;
+    //     world.push(dot);
+    // }
 
-    const int boxes = 20;
     auto green_mat = std::make_shared<DiffuseMat>(MatColor(0.48,0.83,0.53));
-    for(int i=0; i<boxes;i++){
-        for(int j=0;j<boxes;j++){
-            dtype w = 100.0;
-            dtype x0 = -1000.0 + i*w;
-            dtype z0 = -1000.0 + j*w;
-            dtype y0 = 0.0;
-            dtype x1 = x0 + w;
-            dtype y1 = rand_double(1.0,101.0);
-            dtype z1 = z0 + w;
-            createBox(Pt3(x0,y0,z0), Pt3(x1,y1,z1), world, green_mat);
-        }
-    }
+    // const int boxes = 20;
+    // for(int i=0; i<boxes;i++){
+    //     for(int j=0;j<boxes;j++){
+    //         dtype w = 100.0;
+    //         dtype x0 = -1000.0 + i*w;
+    //         dtype z0 = -1000.0 + j*w;
+    //         dtype y0 = 0.0;
+    //         dtype x1 = x0 + w;
+    //         dtype y1 = rand_double(1.0,101.0);
+    //         dtype z1 = z0 + w;
+    //         createBox(Pt3(x0,y0,z0), Pt3(x1,y1,z1), world, green_mat);
+    //     }
+    // }
+    createBox(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,20.0,1000.0), world, green_mat);
+    // auto ground = std::make_shared<AxisAlignedRect>(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,0.0,1000.0),1);
+    // ground->material = green_mat;
+    // world.push(ground);
+
+
+    auto boundary = std::make_shared<Sphere>(Pt3(0.0,0.0,0.0),70);
+    auto scene_fog = std::make_shared<ParticipatingMedia>(boundary, MIN_HIT_DIST);
+    // auto solid_tex = std::make_shared<SolidColorTexture>(MatColor(1.0,1.0,1.0));
+    auto scene_fog_tex = std::make_shared<SolidColorTexture>(MatColor(1.0,1.0,1.0));
+    auto scene_fog_mat = std::make_shared<ColoredRandomScatterMat>(random_scatter_mat, scene_fog_tex);
+    scene_fog->material = scene_fog_mat;
+    world.push(scene_fog);
 
 }
 
@@ -306,9 +334,9 @@ void ray_test(){
 void naive_test(){
     Camera cam;
     HittableVec world;
-    // naive_scene_setup(cam, world);
+    naive_scene_setup(cam, world);
     // random_scene_setup(cam, world);
-    cornel_box_setup(cam, world);
+    // cornel_box_setup(cam, world);
     const int img_width = IMG_WIDTH;
     const int img_height = (double)img_width / ASPECT_RATIO;
     Image<RGB_t> img(img_width, img_height);    
@@ -337,15 +365,16 @@ void ray_tracer_test(){
     HittableVec world;
     // naive_scene_setup(cam, world);
     // random_scene_setup(cam, world);
-    cornel_box_setup(cam, world);
-    // final_scene_setup(cam,world);
+    // cornel_box_setup(cam, world);
+    final_scene_setup(cam,world);
     const int img_width = IMG_WIDTH;
     const int img_height = (double)img_width / ASPECT_RATIO;
     Image<RGB_t> img(img_width, img_height);    
     Image<MatColor> buffer(img_width, img_height);
-    // BVHRayTracer ray_tracer(world);
-    RayTracer ray_tracer(world);
-    
+    BVHRayTracer ray_tracer(world);
+    // RayTracer ray_tracer(world);
+    omp_set_dynamic(0);
+    omp_set_num_threads(8);
     auto trace_start = std::chrono::steady_clock::now();
     #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){

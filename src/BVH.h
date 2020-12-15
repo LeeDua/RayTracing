@@ -12,7 +12,7 @@ namespace RayTracing{
     class BVHNode: public BVHBase, public virtual IHasBox{
         public:
         BVHNode(const HittableVec& objs){
-            ASSERT( (objs.box.p1- objs.box.p2).length() > 0.0001 );
+            ASSERT( (objs.box.p1- objs.box.p2).length() > MIN_HIT_DIST );
             box = objs.box;
             HittableVec left_objs;
             HittableVec right_objs;
@@ -31,7 +31,7 @@ namespace RayTracing{
                 right = std::static_pointer_cast<BVHBase>(std::make_shared<BVHLeaf>(std::move(right_objs)));
         }
 
-        bool hit(const Ray& ray, HitRecord& record, dtype minDist=0.0001, dtype maxDist=DINF) const override {
+        bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override {
             #ifdef DEBUG
             node_count ++;
             #endif
