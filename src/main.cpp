@@ -296,7 +296,7 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     // world.push(ground);
 
 
-    auto boundary = std::make_shared<Sphere>(Pt3(0.0,0.0,0.0),70);
+    auto boundary = std::make_shared<Sphere>(Pt3(0.0,0.0,0.0),5000.0);
     auto scene_fog = std::make_shared<ParticipatingMedia>(boundary, MIN_HIT_DIST);
     // auto solid_tex = std::make_shared<SolidColorTexture>(MatColor(1.0,1.0,1.0));
     auto scene_fog_tex = std::make_shared<SolidColorTexture>(MatColor(1.0,1.0,1.0));
@@ -378,7 +378,7 @@ void ray_tracer_test(){
     auto trace_start = std::chrono::steady_clock::now();
     #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){
-        #pragma omp for nowait
+        #pragma omp for schedule(guided,1) nowait 
         for(int i=0; i<img.width(); i++){
             for(int sampling=0;sampling<SAMPLE_PER_PIXEL; sampling++){
                 dtype du = rand_double();

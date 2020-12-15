@@ -59,7 +59,8 @@ namespace RayTracing {
                     record.normAgainstRay = false;
                     record.n *= -1.0;
                 }
-                ASSERT(material != nullptr);
+                // Boundary object may not have material
+                // ASSERT(material != nullptr);
                 record.material = material;
                 record.uv = getUV(record.n);
                 return true;
@@ -88,16 +89,20 @@ namespace RayTracing {
             constructBox();
         }
         bool hit(const Ray& ray, HitRecord& record, dtype minDist=MIN_HIT_DIST, dtype maxDist=DINF) const override {
-            HitRecord boundary_hit;
-            // should be inside boundary, NOTE DINF is used as maxDist because we are only testing whether the origin of ray is inside the boundary
-            bool inside_boundary = bound->hit(ray, boundary_hit, minDist, DINF);
-            if(!inside_boundary) return false;
+            HitRecord backward_hit, forward_hit;
+            // the origin of ray is inside the boundary
+            // to test this, a backward ray and forward ray is casted
+            bool backward = bound->hit(ray, backward_hit, -DINF, 0);
+            if(!backward)return false;
+            bool forward = bound->hit(ray, forward_hit, backward_hit.t + EPSILON_MORE, DINF);
+            ASSERT(forward);
             dtype dist = inverse_density * log(rand_double());
             // ASSUMING DIST IS SMALL AND WILL NOT CAUSE THE RAY HIT THE BOUND MORE THAN ONCE
             // fail to travel through, scatter in all dir
             // Check dist <= previous nearest hit, allowing equal because the ray may hit the boundary before
             // if other objs are nearer than dist, the following hit check after particapating media will overide hit record, so it's totally fine!
-            if( dist < boundary_hit.t && (dist < maxDist || abs(dist-maxDist)<EPSILON_MORE)){
+            // if( dist - backward_hit.t < forward_hit.t && (dist < maxDist || abs(dist-maxDist)<EPSILON_MORE)){
+            if( dist < forward_hit.t && dist < maxDist ){
                 record.t = dist;    
                 // Normal dir does not matter
                 ASSERT( material != nullptr );
