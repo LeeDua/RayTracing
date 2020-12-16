@@ -28,13 +28,13 @@ static int light_hit_count = 0;
 #include <cstdlib>
 #include <memory>
 #include <utility>
-
+#include <random>
 
 
 #define PI 3.1415926535897932385
 #define MAX_RECURSIVE_DEPTH 50
-#define SAMPLE_PER_PIXEL 5
-#define IMG_WIDTH 400
+#define SAMPLE_PER_PIXEL 50000
+#define IMG_WIDTH 800
 // #define ASPECT_RATIO (3.0 / 2.0)
 // #define ASPECT_RATIO (16.0 / 9.0)
 #define ASPECT_RATIO 1.0
@@ -48,7 +48,9 @@ inline dtype degree_to_radius(dtype degree){
 }
 
 inline dtype rand_double(dtype min=0.0, dtype max=1.0){
-    return min + (max-min)* rand() / (RAND_MAX + 1.0);
+    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    return min + (max-min) * distribution(generator);
 }
 
 

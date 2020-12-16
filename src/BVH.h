@@ -3,6 +3,7 @@
 
 #include "HittableVec.h"
 #include "AABB.h"
+#include <algorithm>
 
 namespace RayTracing{
 
@@ -10,12 +11,14 @@ namespace RayTracing{
     class BVHBase: public virtual IHittable{};
     class BVHNode: public BVHBase, public virtual IHasBox{
         public:
-        BVHNode(const HittableVec& objs){
+        // BVHNode(const HittableVec& objs){
+        BVHNode(HittableVec& objs){
             ASSERT( (objs.box.p1- objs.box.p2).length() > MIN_HIT_DIST );
             box = objs.box;
             HittableVec left_objs;
             HittableVec right_objs;
-            split(objs, left_objs, right_objs);
+            // split(objs, left_objs, right_objs);
+            sortSplit(objs, left_objs, right_objs);
             left_objs.init();
             right_objs.init();
             // std::cout << "Current node size: " << objs.size() << " ; child size: " << left_objs.size() << " " << right_objs.size() << std::endl;
@@ -75,6 +78,26 @@ namespace RayTracing{
                 std::copy(original_list.objs.begin(), mid_iter, left_list.objs.begin());
                 std::copy(mid_iter, original_list.objs.end(), right_list.objs.begin());
             }
+        }
+
+        void sortSplit(HittableVec& original_list, HittableVec& left_list, HittableVec& right_list){
+            int axis = 0;
+            dtype minmax = -DINF;
+            for(int i=0;i<3;i++){
+                dtype axis_minmax = abs(box.p1[i]-box.p2[i]);
+                if( axis_minmax > minmax ){
+                    minmax = axis_minmax;
+                    axis = i;
+                }
+            }
+            std::sort(original_list.objs.begin(), original_list.objs.end(), [axis](obj_ptr a, obj_ptr b){
+                return ( (a->box.p1[axis] + a->box.p2[axis])/2 < (b->box.p1[axis] + b->box.p2[axis])/2 );
+            });
+            auto mid_iter = original_list.objs.begin() + original_list.size() / 2;
+            left_list.objs.resize(original_list.size()/2);
+            right_list.objs.resize(original_list.size() - original_list.size()/2);
+            std::copy(original_list.objs.begin(), mid_iter, left_list.objs.begin());
+            std::copy(mid_iter, original_list.objs.end(), right_list.objs.begin());            
         }
         
         // Do not need mannual bbox construct because the box is the same as hittableVec

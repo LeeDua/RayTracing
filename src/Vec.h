@@ -22,7 +22,7 @@ namespace RayTracing{
         c[2] = sqrt(std::min(c[2], 1.0));
     }
 
-    RGB_t toRGB(const MatColor& c){
+    inline RGB_t toRGB(const MatColor& c){
         return RGB_t{
             img_dtype(255.99*c[0]),
             img_dtype(255.99*c[1]),
@@ -30,7 +30,7 @@ namespace RayTracing{
         };
     }
 
-    MatColor toDouble(const RGB_t& c){
+    inline MatColor toDouble(const RGB_t& c){
         return MatColor{
             1.0/255.99*c[0],
             1.0/255.99*c[1],

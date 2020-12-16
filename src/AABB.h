@@ -14,34 +14,34 @@ namespace RayTracing{
             #ifdef DEBUG
             box_count ++ ;
             #endif
-            dtype max_tmin,min_tmax;
-            checkBoxHit(ray, max_tmin, min_tmax);
-            // DO NOT NEED TO CHECK IF T LIES IN [ MINDIST , MAXDIST ] !!!
-            if(max_tmin<min_tmax){            
-                #ifdef DEBUG
-                aabb_hit_count ++;
-                #endif
-                return true;
+            for(int i=0;i<3;i++){
+                dtype dir = ray.direction()[i];
+                dtype ori = ray.origin()[i];
+                dtype tmin = (p1[i]-ori)/dir;
+                dtype tmax = (p2[i]-ori)/dir;
+                if(tmin>tmax)std::swap(tmin,tmax);
+                minDist = std::max(tmin,minDist);
+                maxDist = std::min(tmax,maxDist);
+                if(maxDist<=minDist)return false;
             }
-            return false;
+            return true;            
         }
 
         protected:
-        void checkBoxHit(const Ray& ray, dtype& max_tmin, dtype& min_tmax) const{
+        inline void checkBoxHit(const Ray& ray, dtype& max_tmin, dtype& min_tmax) const{
             max_tmin = -DINF;
             min_tmax = DINF;
             for(int i=0; i<3; i++){
-                // if(ray.direction()[i] != 0){
-                    // TODO: DO NOT DEAL WITH DIRECTION[I] == 0 CORRECTLY!
-                    dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
-                    dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
-                    dtype tmin = std::min(t1, t2);
-                    dtype tmax = std::max(t1, t2);
-                    if(tmin > max_tmin)
-                        max_tmin = tmin;
-                    if(tmax < min_tmax)
-                        min_tmax = tmax;
-                // }
+                // DO NOT DEAL WITH DIRECTION[I] == 0 CORRECTLY! BUT THIS DO NOT ACTUALLY MATERS
+                dtype t1 = (p1[i]-ray.origin()[i])/ray.direction()[i];
+                dtype t2 = (p2[i]-ray.origin()[i])/ray.direction()[i];
+                dtype tmin = t1<t2 ? t1 : t2;
+                dtype tmax = t1>t2 ? t1 : t2;
+                // if(tmin < 0) tmin = 0;
+                if(tmin > max_tmin)
+                    max_tmin = tmin;
+                if(tmax < min_tmax)
+                    min_tmax = tmax;
             }
         }
     };

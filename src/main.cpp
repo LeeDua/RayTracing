@@ -217,7 +217,7 @@ void cornel_box_setup(Camera& cam, HittableVec& world){
 void final_scene_setup(Camera& cam, HittableVec& world){
     dtype focal_length = 1.0;    
     dtype fovy = 40.0;
-    Pt3 cam_origin(478, 278, -600);;
+    Pt3 cam_origin(478, 278, -600);
     Dir3 look_at(-200,0,600);
     Dir3 cam_up(0.0, 1.0, 0.0);
     cam = Camera(cam_origin, look_at, cam_up, ASPECT_RATIO, fovy, focal_length);
@@ -277,19 +277,19 @@ void final_scene_setup(Camera& cam, HittableVec& world){
     }
 
     auto green_mat = std::make_shared<DiffuseMat>(MatColor(0.48,0.83,0.53));
-    // const int boxes = 20;
-    // for(int i=0; i<boxes;i++){
-    //     for(int j=0;j<boxes;j++){
-    //         dtype w = 100.0;
-    //         dtype x0 = -1000.0 + i*w;
-    //         dtype z0 = -1000.0 + j*w;
-    //         dtype y0 = 0.0;
-    //         dtype x1 = x0 + w;
-    //         dtype y1 = rand_double(1.0,101.0);
-    //         dtype z1 = z0 + w;
-    //         createBox(Pt3(x0,y0,z0), Pt3(x1,y1,z1), world, green_mat);
-    //     }
-    // }
+    const int boxes = 20;
+    for(int i=0; i<boxes;i++){
+        for(int j=0;j<boxes;j++){
+            dtype w = 100.0;
+            dtype x0 = -1000.0 + i*w;
+            dtype z0 = -1000.0 + j*w;
+            dtype y0 = 0.0;
+            dtype x1 = x0 + w;
+            dtype y1 = rand_double(1.0,101.0);
+            dtype z1 = z0 + w;
+            createBox(Pt3(x0,y0,z0), Pt3(x1,y1,z1), world, green_mat);
+        }
+    }
     // createBox(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,20.0,1000.0), world, green_mat);
     auto ground = std::make_shared<AxisAlignedRect>(Pt3(-1000.0,0.0,-1000.0),Pt3(1000.0,0.0,1000.0),1);
     ground->material = green_mat;
@@ -373,13 +373,19 @@ void ray_tracer_test(){
     Image<MatColor> buffer(img_width, img_height);
     BVHRayTracer ray_tracer(world);
     // RayTracer ray_tracer(world);
-    omp_set_dynamic(0);
-    omp_set_num_threads(8);
+
+    //TODO under release build settings, performance actually decays when thread num > 4, but why?
+    // omp_set_dynamic(0);
+    // omp_set_num_threads(4);
     auto trace_start = std::chrono::steady_clock::now();
     #pragma omp parallel
     for(int j = img.height()-1; j >= 0;j--){
         #pragma omp for schedule(guided,1) nowait 
         for(int i=0; i<img.width(); i++){
+            dtype r = 0.0, g = 0.0, b = 0.0;
+            // #pragma omp declare reduction(ColorPlus: MatColor: omp_out += omp_in)
+            // #pragma omp parralel for schedule(guided,4) reduction(ColorPlus:color) //nowait
+            #pragma omp parallel for schedule(guided,4) reduction(+: r, g, b)
             for(int sampling=0;sampling<SAMPLE_PER_PIXEL; sampling++){
                 dtype du = rand_double();
                 dtype dv = rand_double();
@@ -387,8 +393,13 @@ void ray_tracer_test(){
                 dtype v = (double(j) + dv) / (img_height - 1);
                 Ray ray;
                 cam.getRay(u, v, ray);                    
-                buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray);
+                // buffer.at(i,img.height()-1-j) += ray_tracer.trace(ray);
+                MatColor color = ray_tracer.trace(ray);
+                r+=color[0];
+                g+=color[1];
+                b+=color[2];
             }
+            buffer.setColor(i,img.height()-1-j,MatColor(r,g,b));
         }
         #pragma omp master
         {
@@ -404,7 +415,7 @@ void ray_tracer_test(){
     std::chrono::duration<double> trace_time = trace_end - trace_start;
     std::cout << std::endl <<"Trace cost: " << trace_time.count() << std::endl;
     
-    #pragma omp parrallel for collapse(2)
+    // #pragma omp parrallel for collapse(2)
     for(int j=0;j<img.height();j++){
         for(int i=0;i<img.width();i++){
             buffer.at(i,j) /= SAMPLE_PER_PIXEL;
